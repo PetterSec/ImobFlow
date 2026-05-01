@@ -47,7 +47,7 @@ def create_app(config_class=Config) -> Flask:
     # Em dev (DEBUG=True) não força HTTPS para não quebrar localhost
     Talisman(
         app,
-        force_https=not app.config["DEBUG"],
+        force_https=False,
         strict_transport_security=not app.config["DEBUG"],
         strict_transport_security_max_age=31536000,  # 1 ano
         content_security_policy=CSP,
