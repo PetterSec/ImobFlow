@@ -66,22 +66,24 @@ def create_app(config_class=Config) -> Flask:
         return db.session.get(Usuario, user_id)
 
     # ── Blueprints ─────────────────────────────────────────────────────────────
-    from .routes.auth        import auth_bp
-    from .routes.dashboard   import dashboard_bp
-    from .routes.condominios import condominios_bp
-    from .routes.moradores   import moradores_bp
-    from .routes.financeiro  import financeiro_bp
-    from .routes.saas        import saas_bp
-    from .routes.pwa         import pwa_bp
+        from .routes.auth import auth_bp
+        from .routes.dashboard import dashboard_bp
+        from .routes.condominios import condominios_bp
+        from .routes.moradores import moradores_bp
+        from .routes.financeiro import financeiro_bp
+        from .routes.saas import saas_bp
+        from .routes.pwa import pwa_bp
+        from .routes.portal import portal_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(condominios_bp)
-    app.register_blueprint(moradores_bp)
-    app.register_blueprint(financeiro_bp)
-    app.register_blueprint(saas_bp)
-    app.register_blueprint(pwa_bp)
-    app.register_blueprint(portal_bp)
+        app.register_blueprint(auth_bp)
+        app.register_blueprint(dashboard_bp)
+        app.register_blueprint(condominios_bp)
+        app.register_blueprint(moradores_bp)
+        app.register_blueprint(financeiro_bp)
+        app.register_blueprint(saas_bp)
+        app.register_blueprint(pwa_bp)
+        app.register_blueprint(portal_bp)
+    
 
     # ── Health check (Railway / Docker) ────────────────────────────────────────
     @app.route("/health")
