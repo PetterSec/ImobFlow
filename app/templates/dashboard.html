@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Visão geral do sistema{% endblock %}
+
+{% block content %}
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon">🏢</div>
+    <div class="kpi-label">Condomínios</div>
+    <div class="kpi-value">{{ total_condominios }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">👥</div>
+    <div class="kpi-label">Moradores Ativos</div>
+    <div class="kpi-value">{{ total_moradores }}</div>
+  </div>
+  <div class="kpi-card receita">
+    <div class="kpi-icon">📈</div>
+    <div class="kpi-label">Receitas do Mês</div>
+    <div class="kpi-value">R$ {{ "%.0f"|format(receitas_mes) }}</div>
+  </div>
+  <div class="kpi-card despesa">
+    <div class="kpi-icon">📉</div>
+    <div class="kpi-label">Despesas do Mês</div>
+    <div class="kpi-value">R$ {{ "%.0f"|format(despesas_mes) }}</div>
+  </div>
+  <div class="kpi-card {% if saldo_mes >= 0 %}saldo-pos{% else %}saldo-neg{% endif %}">
+    <div class="kpi-icon">{% if saldo_mes >= 0 %}✅{% else %}⚠️{% endif %}</div>
+    <div class="kpi-label">Saldo do Mês</div>
+    <div class="kpi-value">R$ {{ "%.0f"|format(saldo_mes) }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Gráfico pizza -->
+  <div class="card">
+    <div class="card-title">Despesas por Categoria (Mês Atual)</div>
+    {% if cat_labels %}
+      <canvas id="pizzaChart" height="220"></canvas>
+    {% else %}
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <p>Nenhuma despesa registrada este mês.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Últimos lançamentos -->
+  <div class="card">
+    <div class="card-title">Últimos Lançamentos</div>
+    {% if ultimos %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Descrição</th><th>Tipo</th><th>Valor</th></tr>
+          </thead>
+          <tbody>
+            {% for l in ultimos %}
+            <tr>
+              <td>{{ l.descricao }}</td>
+              <td><span class="badge badge-{{ l.tipo }}">{{ l.tipo | capitalize }}</span></td>
+              <td style="font-family:'DM Mono',monospace;font-weight:600;color:{% if l.tipo=='receita' %}var(--accent){% else %}var(--danger){% endif %}">
+                R$ {{ "%.2f"|format(l.valor) }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;">
+        <a href="{{ url_for('financeiro.listar') }}" class="btn btn-outline btn-sm">Ver todos →</a>
+      </div>
+    {% else %}
+      <div class="empty">
+        <div class="empty-icon">💰</div>
+        <p>Nenhum lançamento ainda.</p>
+        <a href="{{ url_for('financeiro.novo') }}" class="btn btn-primary btn-sm">＋ Novo Lançamento</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Lista de condomínios -->
+<div class="card">
+  <div class="card-title">Seus Condomínios</div>
+  {% if condominios %}
+    <div class="grid-3" style="margin-bottom:0;">
+      {% for c in condominios %}
+      <a href="{{ url_for('condominios.detalhe', cid=c.id) }}" style="text-decoration:none;">
+        <div class="kpi-card" style="cursor:pointer;">
+          <div class="kpi-icon">🏢</div>
+          <div style="font-weight:600;color:var(--text);">{{ c.nome }}</div>
+          <div style="font-size:0.8rem;color:var(--subtext);">{{ c.total_unidades }} unidades · {{ c.cidade }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon">🏢</div>
+      <p>Nenhum condomínio cadastrado ainda.</p>
+      <a href="{{ url_for('condominios.novo') }}" class="btn btn-primary btn-sm">＋ Cadastrar Condomínio</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if cat_labels %}
+<script>
+const ctx = document.getElementById('pizzaChart').getContext('2d');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: {{ cat_labels | tojson }},
+    datasets: [{
+      data: {{ cat_valores | tojson }},
+      backgroundColor: ['#00D4AA','#FF4D6D','#FFD166','#5CA4F5','#A29BFE','#FD79A8','#74B9FF','#55EFC4'],
+      borderColor: '#161B22',
+      borderWidth: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#8B949E', font: { family: 'DM Sans' } } }
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

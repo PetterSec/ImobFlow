@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Lançamentos{% endblock %}
+{% block page_title %}Lançamentos Financeiros{% endblock %}
+{% block breadcrumb %}Controle financeiro{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Lançamentos</h2>
+  <div style="display:flex;gap:10px;">
+    <a href="{{ url_for('financeiro.exportar_csv') }}" class="btn btn-outline">⬇ CSV</a>
+    <a href="{{ url_for('financeiro.novo') }}" class="btn btn-primary">＋ Novo</a>
+  </div>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom:20px;padding:16px 20px;">
+  <form method="GET" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Tipo</label>
+      <select name="tipo" class="form-control" style="width:150px;">
+        <option value="">Todos</option>
+        <option value="receita" {% if filtro_tipo=='receita' %}selected{% endif %}>Receita</option>
+        <option value="despesa" {% if filtro_tipo=='despesa' %}selected{% endif %}>Despesa</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">Condomínio</label>
+      <select name="condo" class="form-control" style="width:200px;">
+        <option value="">Todos</option>
+        {% for c in condominios %}
+        <option value="{{ c.id }}" {% if filtro_condo==c.id|string %}selected{% endif %}>{{ c.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-outline" style="height:40px;">🔍 Filtrar</button>
+    <a href="{{ url_for('financeiro.listar') }}" class="btn btn-outline" style="height:40px;">✕ Limpar</a>
+  </form>
+</div>
+
+<div class="card">
+  {% if lancamentos %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Descrição</th><th>Condomínio</th><th>Categoria</th><th>Tipo</th><th>Data</th><th>Pago</th><th>Valor</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for l in lancamentos %}
+        <tr>
+          <td><strong>{{ l.descricao }}</strong></td>
+          <td style="color:var(--subtext);font-size:0.82rem;">{{ l.condominio.nome }}</td>
+          <td style="font-size:0.82rem;">{{ l.categoria }}</td>
+          <td><span class="badge badge-{{ l.tipo }}">{{ l.tipo | capitalize }}</span></td>
+          <td style="font-size:0.82rem;">{{ l.data.strftime('%d/%m/%Y') }}</td>
+          <td>
+            {% if l.pago %}
+              <span class="badge badge-pago">✅ Pago</span>
+            {% else %}
+              <span class="badge badge-pendente">⏳ Pendente</span>
+            {% endif %}
+          </td>
+          <td style="font-family:'DM Mono',monospace;font-weight:700;color:{% if l.tipo=='receita' %}var(--accent){% else %}var(--danger){% endif %};">
+            {% if l.tipo=='despesa' %}−{% else %}+{% endif %} R$ {{ "%.2f"|format(l.valor) }}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('financeiro.deletar', lid=l.id) }}"
+                  onsubmit="return confirm('Deletar este lançamento?')">
+              <button class="btn btn-danger btn-sm btn-icon">🗑</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">💰</div>
+    <p>Nenhum lançamento encontrado.</p>
+    <a href="{{ url_for('financeiro.novo') }}" class="btn btn-primary btn-sm">＋ Registrar Lançamento</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

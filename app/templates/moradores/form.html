@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Novo Morador{% endblock %}
+{% block page_title %}Novo Morador{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('moradores.listar') }}">Moradores</a> / Novo{% endblock %}
+{% block content %}
+<div style="max-width:620px;">
+  <div class="card">
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome completo *</label>
+          <input type="text" name="nome" class="form-control" required autofocus placeholder="Nome do morador">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF</label>
+          <input type="text" name="cpf" class="form-control" placeholder="000.000.000-00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="text" name="telefone" class="form-control" placeholder="(21) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-control" placeholder="morador@email.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo *</label>
+          <select name="tipo" class="form-control">
+            <option value="proprietario">Proprietário</option>
+            <option value="inquilino">Inquilino</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de Entrada</label>
+          <input type="date" name="data_entrada" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unidade *</label>
+        <select name="unidade_id" class="form-control" required>
+          <option value="">— Selecione a unidade —</option>
+          {% for u in unidades %}
+          <option value="{{ u.id }}">{{ u.condominio.nome }} — Unidade {{ u.identificacao }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">💾 Salvar</button>
+        <a href="{{ url_for('moradores.listar') }}" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

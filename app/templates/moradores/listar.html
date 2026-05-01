@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Moradores{% endblock %}
+{% block page_title %}Moradores{% endblock %}
+{% block breadcrumb %}Gestão de moradores{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Moradores</h2>
+  <a href="{{ url_for('moradores.novo') }}" class="btn btn-primary">＋ Novo Morador</a>
+</div>
+
+<div class="card">
+  {% if moradores %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>Unidade</th><th>Tipo</th><th>Telefone</th><th>Entrada</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for m in moradores %}
+        <tr>
+          <td>
+            <strong>{{ m.nome }}</strong>
+            {% if m.email %}<br><small style="color:var(--subtext);">{{ m.email }}</small>{% endif %}
+          </td>
+          <td>{{ m.unidade.identificacao }} — {{ m.unidade.condominio.nome }}</td>
+          <td><span class="badge badge-{{ m.tipo }}">{{ m.tipo | capitalize }}</span></td>
+          <td>{{ m.telefone or '—' }}</td>
+          <td>{{ m.data_entrada.strftime('%d/%m/%Y') if m.data_entrada else '—' }}</td>
+          <td>
+            {% if m.ativo %}
+              <span class="badge badge-ativo">Ativo</span>
+            {% else %}
+              <span class="badge badge-inativo">Saiu {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '' }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if m.ativo %}
+            <form method="POST" action="{{ url_for('moradores.desativar', mid=m.id) }}"
+                  onsubmit="return confirm('Registrar saída de {{ m.nome }}?')">
+              <button class="btn btn-danger btn-sm">Saída</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">👥</div>
+    <p>Nenhum morador cadastrado ainda.</p>
+    <a href="{{ url_for('moradores.novo') }}" class="btn btn-primary btn-sm">＋ Cadastrar Morador</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

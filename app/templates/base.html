@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ImobFlow{% endblock %} — ImobFlow</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00D4AA">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ImobFlow">
+
+  <!-- Segurança: noindex em dev -->
+  {% if config.DEBUG %}<meta name="robots" content="noindex">{% endif %}
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">🏢 ImobFlow</div>
+    <div class="logo-sub">Gestão de Condomínios<br>& Imobiliárias</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <span class="nav-section-title">Principal</span>
+    <a href="{{ url_for('dashboard.index') }}"
+       class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      <span class="icon">📊</span> Dashboard
+    </a>
+
+    <span class="nav-section-title">Condomínios</span>
+    <a href="{{ url_for('condominios.listar') }}"
+       class="nav-link {% if request.endpoint and 'condominios' in request.endpoint %}active{% endif %}">
+      <span class="icon">🏢</span> Condomínios
+    </a>
+    <a href="{{ url_for('moradores.listar') }}"
+       class="nav-link {% if request.endpoint and 'moradores' in request.endpoint %}active{% endif %}">
+      <span class="icon">👥</span> Moradores
+    </a>
+
+    <span class="nav-section-title">Financeiro</span>
+    <a href="{{ url_for('financeiro.listar') }}"
+       class="nav-link {% if request.endpoint == 'financeiro.listar' %}active{% endif %}">
+      <span class="icon">💰</span> Lançamentos
+    </a>
+    <a href="{{ url_for('financeiro.novo') }}"
+       class="nav-link {% if request.endpoint == 'financeiro.novo' %}active{% endif %}">
+      <span class="icon">➕</span> Novo Lançamento
+    </a>
+    <a href="{{ url_for('financeiro.exportar_csv') }}" class="nav-link">
+      <span class="icon">⬇</span> Exportar CSV
+    </a>
+
+    <span class="nav-section-title">Conta</span>
+    <a href="{{ url_for('saas.planos') }}"
+       class="nav-link {% if request.endpoint and 'saas' in request.endpoint %}active{% endif %}">
+      <span class="icon">⭐</span> Planos
+      {% if current_user.plano_atual == 'free' %}
+        <span class="badge badge-pendente" style="margin-left:auto;font-size:0.65rem;">Free</span>
+      {% endif %}
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-name">{{ current_user.nome }}</div>
+    <div class="user-role">
+      {{ current_user.perfil | capitalize }} ·
+      <span style="color:var(--accent);">{{ current_user.plano_atual | capitalize }}</span>
+    </div>
+    <a href="{{ url_for('auth.logout') }}">🚪 Sair</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div>
+        <h1>{% block page_title %}{% endblock %}</h1>
+        <div class="breadcrumb">{% block breadcrumb %}{% endblock %}</div>
+      </div>
+    </div>
+    <span class="date-badge">{{ now.strftime('%d/%m/%Y') if now else '' }}</span>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-msgs">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+              {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% else %}ℹ️{% endif %}
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('visible');
+}
+// Registra service worker (PWA)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

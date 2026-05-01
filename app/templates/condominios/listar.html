@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Condomínios{% endblock %}
+{% block page_title %}Condomínios{% endblock %}
+{% block breadcrumb %}Gestão de condomínios{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Meus Condomínios</h2>
+  <a href="{{ url_for('condominios.novo') }}" class="btn btn-primary">＋ Novo Condomínio</a>
+</div>
+
+{% if condominios %}
+<div class="grid-3">
+  {% for c in condominios %}
+  <div class="kpi-card" style="gap:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <span style="font-size:1.8rem;">🏢</span>
+      <form method="POST" action="{{ url_for('condominios.deletar', cid=c.id) }}"
+            onsubmit="return confirm('Deletar {{ c.nome }}?')">
+        <button class="btn btn-danger btn-sm btn-icon">🗑</button>
+      </form>
+    </div>
+    <div style="font-weight:700;font-size:1rem;color:var(--text);">{{ c.nome }}</div>
+    <div style="font-size:0.8rem;color:var(--subtext);">
+      📍 {{ c.endereco }}, {{ c.cidade }}<br>
+      🏠 {{ c.total_unidades }} unidades
+    </div>
+    <a href="{{ url_for('condominios.detalhe', cid=c.id) }}" class="btn btn-outline btn-sm" style="margin-top:4px;">
+      Ver detalhes →
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty">
+    <div class="empty-icon">🏢</div>
+    <p>Você ainda não cadastrou nenhum condomínio.</p>
+    <a href="{{ url_for('condominios.novo') }}" class="btn btn-primary">＋ Cadastrar agora</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

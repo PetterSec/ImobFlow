@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{% if condo %}Editar{% else %}Novo{% endif %} Condomínio{% endblock %}
+{% block page_title %}{% if condo %}Editar Condomínio{% else %}Novo Condomínio{% endif %}{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('condominios.listar') }}">Condomínios</a> / {% if condo %}{{ condo.nome }}{% else %}Novo{% endif %}{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Nome do Condomínio *</label>
+        <input type="text" name="nome" class="form-control" placeholder="Ex: Residencial das Flores"
+               value="{{ condo.nome if condo else '' }}" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Endereço</label>
+        <input type="text" name="endereco" class="form-control" placeholder="Rua, número, bairro"
+               value="{{ condo.endereco if condo else '' }}">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cidade</label>
+          <input type="text" name="cidade" class="form-control" placeholder="Cidade"
+                 value="{{ condo.cidade if condo else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CEP</label>
+          <input type="text" name="cep" class="form-control" placeholder="00000-000"
+                 value="{{ condo.cep if condo else '' }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total de Unidades</label>
+        <input type="number" name="total_unidades" class="form-control" min="0" placeholder="Ex: 48"
+               value="{{ condo.total_unidades if condo else '' }}">
+        <small style="color:var(--subtext);font-size:0.78rem;">As unidades serão criadas automaticamente (101, 102...)</small>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">💾 Salvar</button>
+        <a href="{{ url_for('condominios.listar') }}" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ condo.nome }}{% endblock %}
+{% block page_title %}{{ condo.nome }}{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('condominios.listar') }}">Condomínios</a> / {{ condo.nome }}{% endblock %}
+{% block content %}
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon">🏠</div>
+    <div class="kpi-label">Total de Unidades</div>
+    <div class="kpi-value">{{ condo.total_unidades }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">👥</div>
+    <div class="kpi-label">Unidades Ocupadas</div>
+    <div class="kpi-value">{{ condo.unidades | selectattr('morador') | list | length }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">📍</div>
+    <div class="kpi-label">Cidade</div>
+    <div class="kpi-value" style="font-size:1.1rem;">{{ condo.cidade or '—' }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Unidades</div>
+  {% if condo.unidades %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Unidade</th><th>Tipo</th><th>Morador</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for u in condo.unidades %}
+        <tr>
+          <td><strong>{{ u.identificacao }}</strong></td>
+          <td>{{ u.tipo | capitalize }}</td>
+          <td>{{ u.morador.nome if u.morador else '—' }}</td>
+          <td>
+            {% if u.morador and u.morador.ativo %}
+              <span class="badge badge-ativo">Ocupada</span>
+            {% else %}
+              <span class="badge badge-inativo">Livre</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><p>Nenhuma unidade cadastrada.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

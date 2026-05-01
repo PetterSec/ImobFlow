@@ -1,0 +1,24 @@
+# Web framework
+flask==3.0.3
+flask-sqlalchemy==3.1.1
+flask-login==0.6.3
+flask-wtf==3.1.2
+werkzeug==3.0.3
+wtforms==3.1.2
+
+# Segurança
+flask-talisman==1.1.0
+cryptography==42.0.8
+
+# Banco de dados
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.31
+
+# Servidor de produção
+gunicorn==21.2.0
+
+# SaaS / Pagamentos
+stripe==9.12.0
+
+# Webhooks assíncronos
+requests==2.32.3
