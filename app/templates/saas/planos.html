@@ -1,83 +1,89 @@
 {% extends "base.html" %}
 {% block title %}Planos{% endblock %}
 {% block page_title %}Planos e Assinaturas{% endblock %}
-{% block breadcrumb %}Escolha seu plano{% endblock %}
+{% block breadcrumb %}Escolha o plano ideal para você{% endblock %}
 {% block content %}
-<div style="max-width:800px;margin:0 auto;">
 
-  {% if current_user.plano_atual != 'free' %}
-  <div class="flash flash-success" style="margin-bottom:24px;">
-    ✅ Você está no plano <strong>{{ current_user.plano_atual | capitalize }}</strong>. Status: {{ current_user.status_pagamento }}.
+{% if current_user.plano_atual != 'free' %}
+<div class="flash flash-success">
+  ✅ Você está no plano <strong>{{ current_user.plano_atual | capitalize }}</strong>. Status: {{ current_user.status_pagamento }}.
+</div>
+{% endif %}
+
+<div class="grid-3" style="align-items:start;max-width:900px;margin:0 auto;">
+
+  <div class="plan-card">
+    <div class="plan-name">Free</div>
+    <div class="plan-price">R$ 0 <span>/mês</span></div>
+    <div class="gold-divider"></div>
+    <div class="plan-features">
+      ✅ 1 condomínio<br>
+      ✅ até 30 unidades<br>
+      ✅ lançamentos ilimitados<br>
+      ✅ exportação CSV<br>
+      ❌ relatórios PDF<br>
+      ❌ portal do morador<br>
+      ❌ suporte prioritário
+    </div>
+    {% if current_user.plano_atual == 'free' %}
+      <span class="badge badge-free">Plano atual</span>
+    {% else %}
+      <span class="badge badge-free" style="opacity:.5;">Plano atual</span>
+    {% endif %}
   </div>
-  {% endif %}
 
-  <div class="grid-3" style="align-items:start;">
-
-    <!-- Free -->
-    <div class="card" style="text-align:center;">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--subtext);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Free</div>
-      <div style="font-size:2.2rem;font-weight:700;margin-bottom:4px;">R$ 0</div>
-      <div style="font-size:0.8rem;color:var(--subtext);margin-bottom:24px;">para sempre</div>
-      <div style="font-size:0.85rem;color:var(--subtext);line-height:2;margin-bottom:24px;text-align:left;">
-        ✅ 1 condomínio<br>
-        ✅ até 30 unidades<br>
-        ✅ lançamentos ilimitados<br>
-        ❌ relatórios PDF<br>
-        ❌ portal do morador<br>
-        ❌ suporte prioritário
-      </div>
-      {% if current_user.plano_atual == 'free' %}
-        <span class="badge badge-ativo">Plano atual</span>
-      {% endif %}
+  <div class="plan-card featured">
+    <div class="plan-badge-top">Mais Popular</div>
+    <div class="plan-name" style="margin-top:8px;color:var(--gold);">Pro</div>
+    <div class="plan-price" style="color:var(--gold);">R$ 79 <span>/mês</span></div>
+    <div class="gold-divider"></div>
+    <div class="plan-features">
+      ✅ até 3 condomínios<br>
+      ✅ unidades ilimitadas<br>
+      ✅ lançamentos ilimitados<br>
+      ✅ relatórios PDF<br>
+      ✅ portal do morador<br>
+      ✅ exportação CSV<br>
+      ❌ white-label
     </div>
+    {% if current_user.plano_atual == 'pro' %}
+      <span class="badge badge-pro">Plano atual</span>
+    {% else %}
+      <form method="POST" action="{{ url_for('saas.criar_checkout', plano='pro') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary" style="width:100%;">Assinar Pro →</button>
+      </form>
+    {% endif %}
+  </div>
 
-    <!-- Pro -->
-    <div class="card" style="text-align:center;border:2px solid var(--accent);position:relative;">
-      <span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;">MAIS POPULAR</span>
-      <div style="font-size:0.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Pro</div>
-      <div style="font-size:2.2rem;font-weight:700;margin-bottom:4px;">R$ 79</div>
-      <div style="font-size:0.8rem;color:var(--subtext);margin-bottom:24px;">/mês</div>
-      <div style="font-size:0.85rem;color:var(--subtext);line-height:2;margin-bottom:24px;text-align:left;">
-        ✅ até 3 condomínios<br>
-        ✅ unidades ilimitadas<br>
-        ✅ relatórios PDF<br>
-        ✅ portal do morador<br>
-        ✅ exportação CSV<br>
-        ❌ white-label
-      </div>
-      {% if current_user.plano_atual == 'pro' %}
-        <span class="badge badge-ativo">Plano atual</span>
-      {% else %}
-        <form method="POST" action="{{ url_for('saas.criar_checkout', plano='pro') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-primary" style="width:100%;">Assinar Pro →</button>
-        </form>
-      {% endif %}
+  <div class="plan-card">
+    <div class="plan-name">Gestora</div>
+    <div class="plan-price">R$ 199 <span>/mês</span></div>
+    <div class="gold-divider"></div>
+    <div class="plan-features">
+      ✅ condomínios ilimitados<br>
+      ✅ tudo do Pro<br>
+      ✅ white-label<br>
+      ✅ webhooks n8n<br>
+      ✅ API de integração<br>
+      ✅ suporte prioritário<br>
+      ✅ multi-administradores
     </div>
+    {% if current_user.plano_atual == 'gestora' %}
+      <span class="badge badge-gestora">Plano atual</span>
+    {% else %}
+      <form method="POST" action="{{ url_for('saas.criar_checkout', plano='gestora') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline" style="width:100%;border-color:var(--gold3);color:var(--gold);">Assinar Gestora →</button>
+      </form>
+    {% endif %}
+  </div>
 
-    <!-- Gestora -->
-    <div class="card" style="text-align:center;">
-      <div style="font-size:0.72rem;font-weight:700;color:var(--subtext);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Gestora</div>
-      <div style="font-size:2.2rem;font-weight:700;margin-bottom:4px;">R$ 199</div>
-      <div style="font-size:0.8rem;color:var(--subtext);margin-bottom:24px;">/mês</div>
-      <div style="font-size:0.85rem;color:var(--subtext);line-height:2;margin-bottom:24px;text-align:left;">
-        ✅ condomínios ilimitados<br>
-        ✅ tudo do Pro<br>
-        ✅ white-label<br>
-        ✅ API webhooks (n8n)<br>
-        ✅ suporte prioritário<br>
-        ✅ multi-administradores
-      </div>
-      {% if current_user.plano_atual == 'gestora' %}
-        <span class="badge badge-ativo">Plano atual</span>
-      {% else %}
-        <form method="POST" action="{{ url_for('saas.criar_checkout', plano='gestora') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-outline" style="width:100%;">Assinar Gestora →</button>
-        </form>
-      {% endif %}
-    </div>
+</div>
 
+<div class="card" style="max-width:900px;margin:20px auto 0;text-align:center;padding:20px;">
+  <div style="font-size:.75rem;color:var(--muted);">
+    Pagamento seguro via Stripe · Cancele quando quiser · Sem taxa de adesão
   </div>
 </div>
 {% endblock %}

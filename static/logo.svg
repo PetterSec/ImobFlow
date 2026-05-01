@@ -1,0 +1,8 @@
+<svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hexágono marca -->
+  <path d="M24 4L40 13.6V32.4L24 42L8 32.4V13.6L24 4Z" stroke="#C9963A" stroke-width="1.2" fill="none"/>
+  <path d="M24 10L34 15.8V27.2L24 33L14 27.2V15.8L24 10Z" fill="#6B1E3C" stroke="#C9963A" stroke-width=".8"/>
+  <path d="M24 16L29 18.9V24.1L24 27L19 24.1V18.9L24 16Z" fill="#C9963A"/>
+  <!-- Wordmark -->
+  <text x="52" y="30" font-family="Cormorant Garamond, Georgia, serif" font-size="22" font-weight="600" fill="#C9963A" letter-spacing="0.3">ImobFlow</text>
+</svg>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Painel — ImobFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="display:block;">
+<div class="portal-header">
+  <img src="{{ url_for('static', filename='logo.svg') }}" alt="ImobFlow" style="height:32px;">
+  <span class="portal-badge">Portal do Morador</span>
+</div>
+
+<div style="max-width:900px;margin:0 auto;padding:36px 24px;">
+
+  <!-- Identificação -->
+  <div class="page-header">
+    <div>
+      <h2>Olá, {{ morador.nome.split()[0] }}</h2>
+      <div class="subtitle">
+        Unidade <strong style="color:var(--gold);">{{ unidade.identificacao if unidade else '—' }}</strong>
+        {% if condo %} · {{ condo.nome }}{% endif %}
+        · <span class="badge badge-{{ morador.tipo }}">{{ morador.tipo | capitalize }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" style="margin-bottom:28px;">
+    <div class="kpi-card receita">
+      <div class="kpi-icon">◈</div>
+      <div class="kpi-label">Receitas (últ. 24 lançamentos)</div>
+      <div class="kpi-value">R$ {{ "%.0f"|format(receitas) }}</div>
+    </div>
+    <div class="kpi-card despesa">
+      <div class="kpi-icon">◆</div>
+      <div class="kpi-label">Despesas</div>
+      <div class="kpi-value">R$ {{ "%.0f"|format(despesas) }}</div>
+    </div>
+    <div class="kpi-card {% if saldo >= 0 %}saldo-pos{% else %}saldo-neg{% endif %}">
+      <div class="kpi-icon">✦</div>
+      <div class="kpi-label">Saldo</div>
+      <div class="kpi-value">R$ {{ "%.0f"|format(saldo) }}</div>
+    </div>
+  </div>
+
+  <!-- Histórico de lançamentos -->
+  <div class="card">
+    <div class="card-title">Histórico Financeiro do Condomínio</div>
+    {% if lancamentos %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Data</th><th>Status</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+          {% for l in lancamentos %}
+          <tr>
+            <td><strong>{{ l.descricao }}</strong></td>
+            <td style="color:var(--subtext);font-size:0.82rem;">{{ l.categoria }}</td>
+            <td><span class="badge badge-{{ l.tipo }}">{{ l.tipo | capitalize }}</span></td>
+            <td style="font-family:'DM Mono',monospace;font-size:0.82rem;">{{ l.data.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if l.pago %}<span class="badge badge-pago">✦ Pago</span>
+              {% else %}<span class="badge badge-pendente">⏳ Pendente</span>{% endif %}
+            </td>
+            <td style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;
+                       color:{% if l.tipo=='receita' %}var(--gold){% else %}var(--wine){% endif %};">
+              {% if l.tipo=='despesa' %}−{% else %}+{% endif %} R$ {{ "%.2f"|format(l.valor) }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">◈</div>
+      <p>Nenhum lançamento registrado ainda.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <p style="text-align:center;font-size:0.75rem;color:var(--hint);margin-top:24px;">
+    Dados fornecidos pelo síndico do seu condomínio via ImobFlow.
+    Dúvidas? Entre em contato com a administração.
+  </p>
+</div>
+</body>
+</html>

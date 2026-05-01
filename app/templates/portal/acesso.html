@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso — Portal do Morador</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:420px;">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt="ImobFlow" style="width:160px;margin-bottom:20px;">
+      <p>Informe seu e-mail cadastrado para acessar o painel</p>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" style="margin-bottom:16px;">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">E-mail cadastrado</label>
+        <input type="email" name="email" class="form-control" placeholder="seu@email.com" required autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;">
+        Solicitar Acesso →
+      </button>
+    </form>
+    <p style="text-align:center;margin-top:20px;font-size:0.8rem;color:var(--subtext);">
+      <a href="{{ url_for('portal.index') }}">← Voltar</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>

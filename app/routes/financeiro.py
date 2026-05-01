@@ -92,3 +92,31 @@ def exportar_csv():
     response.headers["Content-Disposition"] = "attachment; filename=lancamentos.csv"
     response.headers["Content-type"] = "text/csv"
     return response
+
+
+@financeiro_bp.route("/relatorio-pdf/<string:condo_id>")
+@login_required
+def relatorio_pdf(condo_id: str):
+    """Gera PDF do balancete mensal do condomínio."""
+    from ..middleware.security import get_tenant_condominio
+    from ..services.relatorio_pdf import gerar_relatorio_pdf
+    from flask import make_response, request as req
+    from datetime import datetime
+
+    condo = get_tenant_condominio(condo_id)
+    mes = int(req.args.get("mes", datetime.utcnow().month))
+    ano = int(req.args.get("ano", datetime.utcnow().year))
+
+    ids = [str(condo.id)]
+    lancamentos = Lancamento.query.filter(
+        Lancamento.condominio_id.in_(ids)
+    ).all()
+
+    pdf_bytes = gerar_relatorio_pdf(condo, lancamentos, mes, ano)
+
+    response = make_response(pdf_bytes)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=balancete_{mes:02d}_{ano}_{condo.nome[:20]}.pdf"
+    )
+    return response

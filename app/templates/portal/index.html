@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Morador — ImobFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div style="text-align:center;max-width:480px;width:100%;">
+    <img src="{{ url_for('static', filename='logo.svg') }}" alt="ImobFlow" style="width:200px;margin-bottom:40px;">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <p style="font-size:1.1rem;color:var(--text-muted);font-family:'Cormorant Garamond',serif;">Portal do Morador</p>
+        <p style="font-size:0.82rem;color:var(--subtext);margin-top:6px;">Transparência e informação em tempo real sobre seu condomínio</p>
+      </div>
+      <a href="{{ url_for('portal.acesso') }}" class="btn btn-primary" style="width:100%;padding:14px;font-size:1rem;justify-content:center;">
+        Acessar meu painel →
+      </a>
+      <p style="margin-top:20px;font-size:0.78rem;color:var(--hint);">Acesso exclusivo para moradores cadastrados</p>
+    </div>
+    <p style="margin-top:24px;font-size:0.75rem;color:var(--hint);">
+      Administrador? <a href="{{ url_for('auth.login') }}">Entrar no sistema</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>
