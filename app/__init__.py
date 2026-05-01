@@ -81,7 +81,7 @@ def create_app(config_class=Config) -> Flask:
     app.register_blueprint(financeiro_bp)
     app.register_blueprint(saas_bp)
     app.register_blueprint(pwa_bp)
-    app.register_blueprint(portal_bp)
+    app.register_blueprint(portalbp)
 
     # ── Health check (Railway / Docker) ────────────────────────────────────────
     @app.route("/health")
