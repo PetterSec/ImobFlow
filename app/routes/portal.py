@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from ..models import db, Morador, Lancamento, Condominio, Unidade
 import hashlib, secrets
 
-portal_bp = Blueprint("portal", __name__, url_prefix="/portal")
+portal_bp = Blueprint("portal", __name__)
 
 def _gerar_token_acesso(morador_id: str, email: str) -> str:
     """Token determinístico baseado em ID + email + secret."""
