@@ -64,6 +64,16 @@ class Config:
     # ── Stripe ────────────────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: str = os.environ.get("STRIPE_SECRET_KEY", "")
     STRIPE_WEBHOOK_SECRET: str = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    # Price IDs do Dashboard Stripe (Products → Price → API ID: price_...)
+    STRIPE_PRICE_ID_PRO: str = os.environ.get("STRIPE_PRICE_ID_PRO", "")
+    STRIPE_PRICE_ID_GESTORA: str = os.environ.get("STRIPE_PRICE_ID_GESTORA", "")
+
+    # Anúncios (plano Free) — exige conta Google AdSense aprovada; ver docs/MONETIZACAO_E_SAAS.md
+    SHOW_ADS_ON_FREE_PLAN: bool = (
+        os.environ.get("SHOW_ADS_ON_FREE_PLAN", "false").lower() == "true"
+    )
+    GOOGLE_ADSENSE_CLIENT: str = os.environ.get("GOOGLE_ADSENSE_CLIENT", "")
+    GOOGLE_ADSENSE_SLOT: str = os.environ.get("GOOGLE_ADSENSE_SLOT", "")
 
     # ── Planos e limites ──────────────────────────────────────────────────────
     PLAN_LIMITS: dict = {

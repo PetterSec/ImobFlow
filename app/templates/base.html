@@ -12,6 +12,10 @@
   {% if config.DEBUG %}<meta name="robots" content="noindex">{% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% if current_user.is_authenticated and current_user.plano_atual == 'free' and show_ads_free and adsense_client %}
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client }}"
+          crossorigin="anonymous"></script>
+  {% endif %}
 </head>
 <body>
 
@@ -106,6 +110,12 @@
         </div>
       {% endif %}
     {% endwith %}
+    {% if current_user.is_authenticated and current_user.plano_atual == 'free' and show_ads_free and adsense_client and adsense_slot %}
+    <div class="card" style="max-width:900px;margin:0 auto 16px;text-align:center;padding:10px;background:rgba(201,150,58,.06);border:1px dashed var(--gold3);">
+      <div style="font-size:.65rem;color:var(--muted);margin-bottom:8px;">Publicidade · Plano Free</div>
+      {% include "partials/adsense_banner.html" %}
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
   </div>
 </div>

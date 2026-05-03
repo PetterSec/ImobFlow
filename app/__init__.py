@@ -21,7 +21,9 @@ CSP = {
     "default-src": "'self'",
     "script-src": [
         "'self'",
+        "'unsafe-inline'",          # AdSense usa push inline no partial (mitigar depois com nonce)
         "cdn.jsdelivr.net",       # Chart.js
+        "pagead2.googlesyndication.com",
     ],
     "style-src": [
         "'self'",
@@ -32,7 +34,7 @@ CSP = {
         "'self'",
         "fonts.gstatic.com",
     ],
-    "img-src": ["'self'", "data:"],
+    "img-src": ["'self'", "data:", "pagead2.googlesyndication.com"],
     "connect-src": "'self'",
     "frame-ancestors": "'none'",  # previne clickjacking
 }
@@ -92,6 +94,10 @@ def create_app(config_class=Config) -> Flask:
     app.register_blueprint(financeiro_bp)
     app.register_blueprint(saas_bp)
     app.register_blueprint(pwa_bp)
+
+    # Webhook Stripe envia POST sem token CSRF — isentar só esta rota
+    from .routes.saas import stripe_webhook
+    csrf.exempt(stripe_webhook)
 
     # ── Health check (Railway / Docker) ────────────────────────────────────────
     @app.route("/health")

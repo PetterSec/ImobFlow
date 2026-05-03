@@ -28,13 +28,22 @@ def criar_checkout(plano: str):
     import stripe
     stripe.api_key = stripe_key
 
+    price_pro = current_app.config.get("STRIPE_PRICE_ID_PRO", "")
+    price_gestora = current_app.config.get("STRIPE_PRICE_ID_GESTORA", "")
     PRICE_IDS = {
-        "pro":     "price_pro_mensal",     # substitua pelo ID real no Stripe
-        "gestora": "price_gestora_mensal",
+        "pro": price_pro,
+        "gestora": price_gestora,
     }
 
     if plano not in PRICE_IDS:
         flash("Plano inválido.", "danger")
+        return redirect(url_for("saas.planos"))
+    if not PRICE_IDS[plano]:
+        flash(
+            "Preço do plano não configurado no servidor (STRIPE_PRICE_ID_*). "
+            "Veja docs/MONETIZACAO_E_SAAS.md.",
+            "warning",
+        )
         return redirect(url_for("saas.planos"))
 
     try:
@@ -94,12 +103,19 @@ def stripe_webhook():
 
         usuario = Usuario.query.filter_by(stripe_customer_id=customer_id).first()
         if usuario:
-            # Determina plano pelo price ID
             price_id = sub["items"]["data"][0]["price"]["id"]
-            if "gestora" in price_id:
+            cfg = current_app.config
+            gestora = cfg.get("STRIPE_PRICE_ID_GESTORA", "")
+            pro = cfg.get("STRIPE_PRICE_ID_PRO", "")
+            if gestora and price_id == gestora:
                 usuario.plano_atual = "gestora"
-            else:
+            elif pro and price_id == pro:
                 usuario.plano_atual = "pro"
+            else:
+                current_app.logger.warning(
+                    "Subscription price_id desconhecido: %s (configure STRIPE_PRICE_ID_*)",
+                    price_id,
+                )
             usuario.status_pagamento = "ativo" if status == "active" else "inativo"
             db.session.commit()
 

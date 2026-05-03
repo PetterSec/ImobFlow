@@ -13,11 +13,12 @@
 4. [Como Rodar Localmente (Linux/Mac)](#como-rodar-localmente-linuxmac)
 5. [Testes automatizados](#testes-automatizados)
 6. [CI no GitHub Actions](#ci-no-github-actions)
-7. [Deploy no Railway](#deploy-no-railway)
-8. [Estrutura do Projeto](#estrutura-do-projeto)
-9. [Banco de Dados](#banco-de-dados)
-10. [Funcionalidades Implementadas](#funcionalidades-implementadas)
-11. [Próximas Etapas](#próximas-etapas)
+7. [Monetização e Stripe (`docs/`)](#monetização-stripe-e-anuncios)
+8. [Deploy no Railway](#deploy-no-railway)
+9. [Estrutura do Projeto](#estrutura-do-projeto)
+10. [Banco de Dados](#banco-de-dados)
+11. [Funcionalidades Implementadas](#funcionalidades-implementadas)
+12. [Próximas Etapas](#próximas-etapas)
 
 ---
 
@@ -129,6 +130,15 @@ python -m pytest -v --cov=app --cov=config --cov-report=term-missing
 ```
 
 Pastas: `tests/` (fixtures em `conftest.py`), configuração em `pytest.ini`.
+
+---
+
+## Monetização, Stripe e anuncios
+
+Guia completo (variáveis, webhook, AdSense no plano Free, como você recebe via Stripe):  
+**[docs/MONETIZACAO_E_SAAS.md](docs/MONETIZACAO_E_SAAS.md)**
+
+Resumo: configure no Railway `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_GESTORA` e cadastre a URL do webhook no Dashboard Stripe. Anúncios no Free são opcionais (`SHOW_ADS_ON_FREE_PLAN`, `GOOGLE_ADSENSE_*`).
 
 ---
 
