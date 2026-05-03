@@ -1,35 +1,3 @@
-# ============================================================
-# ImobFlow — Dependências para desenvolvimento LOCAL (Windows)
-# Para produção (Railway/Linux) use requirements.txt
-# ============================================================
-
-# Web framework
-flask==3.0.3
-flask-sqlalchemy==3.1.1
-flask-login==0.6.3
-flask-wtf==1.2.1
-werkzeug==3.0.3
-wtforms==3.1.2
-
-# Segurança
-flask-talisman==1.1.0
-cryptography==42.0.8
-
-# Carrega .env automaticamente em dev
-python-dotenv==1.0.1
-
-# Banco de dados
-# psycopg2-binary OMITIDO — usa SQLite localmente
-sqlalchemy==2.0.31
-
-# Servidor
-gunicorn==21.2.0
-
-# SaaS / Pagamentos
-stripe==9.12.0
-
-# Webhooks
-requests==2.32.3
-
-# Relatórios PDF
-reportlab==4.2.5
+# Desenvolvimento e CI — instale com: pip install -r requirements.txt -r requirements-dev.txt
+pytest==8.3.4
+pytest-cov==6.0.0

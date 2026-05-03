@@ -11,11 +11,13 @@
 2. [Stack e Arquitetura](#stack-e-arquitetura)
 3. [Como Rodar Localmente (Windows)](#como-rodar-localmente-windows)
 4. [Como Rodar Localmente (Linux/Mac)](#como-rodar-localmente-linuxmac)
-5. [Deploy no Railway](#deploy-no-railway)
-6. [Estrutura do Projeto](#estrutura-do-projeto)
-7. [Banco de Dados](#banco-de-dados)
-8. [Funcionalidades Implementadas](#funcionalidades-implementadas)
-9. [Próximas Etapas](#próximas-etapas)
+5. [Testes automatizados](#testes-automatizados)
+6. [CI no GitHub Actions](#ci-no-github-actions)
+7. [Deploy no Railway](#deploy-no-railway)
+8. [Estrutura do Projeto](#estrutura-do-projeto)
+9. [Banco de Dados](#banco-de-dados)
+10. [Funcionalidades Implementadas](#funcionalidades-implementadas)
+11. [Próximas Etapas](#próximas-etapas)
 
 ---
 
@@ -67,27 +69,18 @@ Ele vai criar o venv, instalar as dependências e criar o `.env`.
 ### Setup manual
 
 ```bat
-# 1. Crie o ambiente virtual com Python 3.12
 py -3.12 -m venv venv
-
-# 2. Ative o ambiente virtual
 venv\Scripts\activate
-
-# 3. Instale as dependências de desenvolvimento (sem psycopg2)
-pip install -r requirements-dev.txt
-
-# 4. Crie o arquivo de ambiente
+pip install -r requirements.txt -r requirements-dev.txt
 copy .env.example .env
-
-# 5. Rode o servidor
 python run.py
 ```
 
-Acesse: http://localhost:5000
+Acesse: http://localhost:5000 (ou a porta indicada no terminal).
 
-> **Nota:** Em desenvolvimento usa SQLite automaticamente. O `requirements-dev.txt` não inclui
-> `psycopg2-binary` pois requer ferramentas de compilação C++ no Windows — não é necessário
-> para desenvolvimento local.
+**Se o PowerShell bloquear `Activate.ps1`:** rode `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` **ou** use `venv\Scripts\activate.bat` no **Prompt de Comando** **ou** chame o Python direto: `venv\Scripts\python.exe run.py`.
+
+**Dependências:** `requirements.txt` é o conjunto completo do app (inclui `psycopg2-binary` no Windows use wheel pré-compilado). `requirements-dev.txt` acrescenta apenas **pytest** e **pytest-cov** para testes locais e CI.
 
 ---
 
@@ -98,8 +91,8 @@ Acesse: http://localhost:5000
 python3.12 -m venv venv
 source venv/bin/activate
 
-# 2. Instale todas as dependências (psycopg2 compila normalmente no Linux)
-pip install -r requirements.txt
+# 2. Instale dependências de produção + testes
+pip install -r requirements.txt -r requirements-dev.txt
 
 # 3. Crie o arquivo de ambiente
 cp .env.example .env
@@ -120,34 +113,81 @@ docker-compose up -d
 
 ---
 
+## 🧪 Testes automatizados
+
+O projeto usa **pytest** com `config.TestConfig` (SQLite em memória, sem depender de PostgreSQL).
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -v
+```
+
+Com cobertura:
+
+```bash
+python -m pytest -v --cov=app --cov=config --cov-report=term-missing
+```
+
+Pastas: `tests/` (fixtures em `conftest.py`), configuração em `pytest.ini`.
+
+---
+
+## 🔄 CI no GitHub Actions
+
+O workflow `.github/workflows/ci.yml` roda em **push** e **pull request** para `main` e `master`:
+
+- Python **3.12**
+- `pip install -r requirements.txt -r requirements-dev.txt`
+- `python -m pytest -v` com cobertura
+
+---
+
 ## ☁️ Deploy no Railway
+
+### Como o app sobe
+
+O Railway usa `railway.json` → comando de start:
+
+`gunicorn run:app --config gunicorn.conf.py`
+
+A porta vem da variável **`PORT`** (o Railway define automaticamente). O `gunicorn.conf.py` lê `PORT` em Python.
+
+O **Procfile** na raiz também está alinhado (`gunicorn run:app --config gunicorn.conf.py`) para ambientes que leem Procfile.
 
 ### Variáveis de ambiente obrigatórias
 
-Configure em: **Settings → Variables** no painel do serviço ImobFlow.
+No painel do **serviço web** (não só do Postgres): **Settings → Variables**.
 
-| Variável | Como obter | Obrigatória? |
-|---|---|---|
-| `SECRET_KEY` | `python -c "import secrets; print(secrets.token_hex(32))"` | ✅ Sim |
-| `ENCRYPTION_KEY` | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` | ✅ Sim |
-| `DATABASE_URL` | Use `${{Postgres.DATABASE_URL}}` para linkar ao PostgreSQL | ✅ Sim |
-| `FLASK_DEBUG` | `false` (sempre em produção) | ✅ Sim |
-| `STRIPE_SECRET_KEY` | dashboard.stripe.com → Developers → API Keys | Para pagamentos |
-| `STRIPE_WEBHOOK_SECRET` | dashboard.stripe.com → Webhooks | Para pagamentos |
-| `N8N_WEBHOOK_URL` | URL do seu workflow n8n | Opcional |
-| `N8N_WEBHOOK_SECRET` | String aleatória que você define | Opcional |
+| Variável | Valor / como obter |
+|---|---|
+| `SECRET_KEY` | `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `ENCRYPTION_KEY` | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` — guarde em lugar seguro; **não troque** depois que houver dados de moradores criptografados |
+| `DATABASE_URL` | Referência ao Postgres: **`${{Postgres.DATABASE_URL}}`** (substitua `Postgres` pelo **nome exato** do plugin Postgres no seu projeto, se for diferente) |
+| `FLASK_DEBUG` | `false` |
 
-> **Atenção:** O valor de `DATABASE_URL` deve ser `${{Postgres.DATABASE_URL}}` — isso linka
-> automaticamente ao serviço PostgreSQL do Railway. Não deixe vazio!
+Opcionais: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`.
 
-### Fluxo de deploy
+**Não defina `PORT` manualmente** — o Railway injeta.
+
+### Checklist rápido — colocar no ar hoje
+
+1. **Postgres:** no projeto Railway, **+ New → Database → PostgreSQL**. Espere provisionar.
+2. **Serviço Flask:** conectado ao mesmo repositório GitHub; **Deploy** após `git push`.
+3. **Variables** no serviço web: cole `SECRET_KEY`, `ENCRYPTION_KEY`, `FLASK_DEBUG=false`, `DATABASE_URL=${{Postgres.DATABASE_URL}}` (ajuste o nome do serviço Postgres).
+4. **Domínio:** **Settings → Networking → Generate Domain** (ex.: `seuprojeto.up.railway.app`).
+5. **Logs:** **Deployments → último deploy → View logs** — procure erros de boot ou de conexão com o banco.
+6. **Smoke test:** abra `https://sua-url.up.railway.app/health` → deve retornar JSON `{"status":"ok"}`. Depois teste `/cadastro` e login.
+
+**Primeiro deploy / banco novo:** o app executa `db.create_all()` na inicialização e cria as tabelas no Postgres.
+
+**Migrações:** hoje não há Alembic; se já existia um SQLite antigo só na sua máquina, não afeta o Postgres novo na nuvem.
+
+### Fluxo de deploy contínuo
 
 ```bash
-# Após qualquer alteração:
 git add .
 git commit -m "feat: descrição do que foi feito"
 git push
-# Railway detecta o push e faz deploy automático (~2 min)
 ```
 
 ### Padrão de commits
@@ -172,13 +212,17 @@ imobflow/
 │
 ├── run.py                         ← Entry point
 ├── config.py                      ← Configurações (lê variáveis de ambiente)
-├── requirements.txt               ← Dependências para produção (Railway/Linux)
-├── requirements-dev.txt           ← Dependências para desenvolvimento Windows
-├── gunicorn.conf.py               ← Config do servidor (fix PORT Railway)
-├── Procfile                       ← Comando de start (Railway usa railway.json)
-├── railway.json                   ← Configuração de deploy Railway
-├── docker-compose.yml             ← Para rodar com Docker localmente
-├── .env.example                   ← Template das variáveis de ambiente
+├── requirements.txt               ← Dependências de produção
+├── requirements-dev.txt         ← pytest + pytest-cov (dev/CI)
+├── pytest.ini                    ← Configuração do pytest
+├── gunicorn.conf.py               ← Gunicorn (lê PORT do Railway)
+├── Procfile                       ← gunicorn run:app (fallback para plataformas Procfile)
+├── railway.json                   ← Deploy Railway (startCommand + Nixpacks)
+├── docker-compose.yml             ← Postgres + web local
+├── .env.example                   ← Template de variáveis (copiar para .env)
+│
+├── .github/workflows/ci.yml       ← GitHub Actions (testes em push/PR)
+├── tests/                         ← Suite pytest (auth, health, models, crypto…)
 │
 ├── app/
 │   ├── __init__.py                ← Factory com Talisman, CSRF, blueprints

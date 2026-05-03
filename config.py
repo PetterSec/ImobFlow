@@ -1,5 +1,6 @@
 import os
 from cryptography.fernet import Fernet
+from sqlalchemy.pool import StaticPool
 
 
 def _get_db_url() -> str:
@@ -74,3 +75,19 @@ class Config:
     # ── n8n Webhooks ──────────────────────────────────────────────────────────
     N8N_WEBHOOK_URL: str = os.environ.get("N8N_WEBHOOK_URL", "")
     N8N_WEBHOOK_SECRET: str = os.environ.get("N8N_WEBHOOK_SECRET", "")
+
+
+class TestConfig(Config):
+    """Configuração isolada para pytest (SQLite em memória, sem rede)."""
+
+    TESTING: bool = True
+    DEBUG: bool = True
+    SECRET_KEY: str = "pytest-secret-do-not-use-in-production"
+    SQLALCHEMY_DATABASE_URI: str = "sqlite:///:memory:"
+    SQLALCHEMY_ENGINE_OPTIONS: dict = {
+        "connect_args": {"check_same_thread": False},
+        "poolclass": StaticPool,
+    }
+    # Chave Fernet válida fixa para testes de CryptoService / Morador
+    FERNET_KEY: bytes = Fernet.generate_key()
+    SESSION_COOKIE_SECURE: bool = False
