@@ -1,3 +1,56 @@
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ambiente virtual
+venv/
+.venv/
+env/
+ENV/
+
+# Variáveis de ambiente — NUNCA subir para o git
+.env
+.env.local
+.env.*.local
+
+# Flask / SQLAlchemy
+instance/
+.webassets-cache
+
+# Banco de dados local
+*.db
+*.sqlite
+*.sqlite3
+
+# Distribuição
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+logs/
+
+# Testes
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Uploads gerados pelo app
+static/uploads/

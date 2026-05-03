@@ -1,6 +1,6 @@
-# 🏢 ImobFlow — Documentação Completa
+# 🏢 ImobFlow — Plataforma SaaS de Gestão Condominial & Imobiliária
 
-> Sistema web de gestão financeira para condomínios e imobiliárias.  
+> Sistema web multi-tenant de gestão financeira para condomínios e imobiliárias.  
 > Desenvolvido em Python com Flask — roda no navegador, funciona em qualquer dispositivo.
 
 ---
@@ -8,56 +8,160 @@
 ## 📋 Índice
 
 1. [O que é o ImobFlow?](#o-que-é-o-imobflow)
-2. [Como Instalar e Rodar](#como-instalar-e-rodar)
-3. [Estrutura do Projeto](#estrutura-do-projeto)
-4. [Como o Flask Funciona](#como-o-flask-funciona)
-5. [Banco de Dados](#banco-de-dados)
-6. [Funcionalidades](#funcionalidades)
-7. [Próximos Passos (Etapa 3)](#próximos-passos-etapa-3)
+2. [Stack e Arquitetura](#stack-e-arquitetura)
+3. [Como Rodar Localmente (Windows)](#como-rodar-localmente-windows)
+4. [Como Rodar Localmente (Linux/Mac)](#como-rodar-localmente-linuxmac)
+5. [Deploy no Railway](#deploy-no-railway)
+6. [Estrutura do Projeto](#estrutura-do-projeto)
+7. [Banco de Dados](#banco-de-dados)
+8. [Funcionalidades Implementadas](#funcionalidades-implementadas)
+9. [Próximas Etapas](#próximas-etapas)
 
 ---
 
 ## 🎯 O que é o ImobFlow?
 
-O ImobFlow é a evolução do FinanceFlow (app desktop) para uma **aplicação web completa**.
+O ImobFlow é uma plataforma SaaS completa de gestão condominial e imobiliária, com arquitetura de segurança profissional e identidade visual premium.
 
-A diferença principal:
-
-| FinanceFlow (anterior) | ImobFlow (agora) |
+| FinanceFlow (origem) | ImobFlow (atual) |
 |---|---|
-| App desktop (só no seu PC) | Roda no navegador |
-| Um usuário por vez | Múltiplos usuários simultâneos |
-| SQLite simples | SQLite agora, PostgreSQL depois |
+| App desktop (só no PC) | Roda no navegador |
+| Um usuário por vez | Multi-tenant (múltiplos clientes) |
+| SQLite simples | SQLite (dev) / PostgreSQL (prod) |
 | Controle pessoal | Gestão de condomínios e imóveis |
-| Sem mobile | Responsivo — funciona no celular |
+| Sem segurança avançada | AES-256, HSTS, CSP, rate limiting |
 
 ---
 
-## 🚀 Como Instalar e Rodar
+## 🛠️ Stack e Arquitetura
 
-### 1. Entre na pasta do projeto
-```bash
-cd imobflow
-```
+- **Backend:** Python 3.12 + Flask 3.0 + SQLAlchemy + Flask-Login + Flask-WTF
+- **Segurança:** Flask-Talisman (HSTS/CSP), criptografia AES-256/Fernet nos campos sensíveis (LGPD)
+- **Banco:** SQLite em dev, PostgreSQL em produção (Railway)
+- **Deploy:** Railway (gunicorn com `gunicorn.conf.py`)
+- **Frontend:** Jinja2 + CSS próprio (identidade premium dourado/vinho) + Chart.js
+- **PWA:** manifest.json + service worker implementados
+- **SaaS:** Stripe para pagamento, 3 planos (Free / Pro R$79 / Gestora R$199)
+- **Multi-tenant:** todos os modelos têm `tenant_id` (UUID) — isolamento total entre clientes
+- **IDs públicos:** UUID em todas as rotas (previne IDOR)
 
-### 2. Crie um ambiente virtual e instale as dependências
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-pip install -r requirements.txt
-```
+### Identidade Visual
+- **Paleta:** Noir `#0E0A06` · Vinho `#6B1E3C` · Ouro `#C9963A` · Creme `#FAF6EF`
+- **Tipografia:** Cormorant Garamond (display) + DM Sans (corpo) + DM Mono (valores)
+- **Logo:** hexágono SVG com gradiente vinho → ouro em `static/logo.svg`
 
-### 3. Rode o servidor
-```bash
+---
+
+## 🚀 Como Rodar Localmente (Windows)
+
+### Pré-requisito: Python 3.12
+
+Instale o Python 3.12 em: https://www.python.org/downloads/release/python-3120/  
+Durante a instalação, marque **"Add Python to PATH"**.
+
+### Setup automático
+
+Dê duplo clique em `setup_windows.bat` na raiz do projeto.  
+Ele vai criar o venv, instalar as dependências e criar o `.env`.
+
+### Setup manual
+
+```bat
+# 1. Crie o ambiente virtual com Python 3.12
+py -3.12 -m venv venv
+
+# 2. Ative o ambiente virtual
+venv\Scripts\activate
+
+# 3. Instale as dependências de desenvolvimento (sem psycopg2)
+pip install -r requirements-dev.txt
+
+# 4. Crie o arquivo de ambiente
+copy .env.example .env
+
+# 5. Rode o servidor
 python run.py
 ```
 
-### 4. Abra no navegador
-```
-http://localhost:5000
+Acesse: http://localhost:5000
+
+> **Nota:** Em desenvolvimento usa SQLite automaticamente. O `requirements-dev.txt` não inclui
+> `psycopg2-binary` pois requer ferramentas de compilação C++ no Windows — não é necessário
+> para desenvolvimento local.
+
+---
+
+## 🐧 Como Rodar Localmente (Linux/Mac)
+
+```bash
+# 1. Crie e ative o ambiente virtual
+python3.12 -m venv venv
+source venv/bin/activate
+
+# 2. Instale todas as dependências (psycopg2 compila normalmente no Linux)
+pip install -r requirements.txt
+
+# 3. Crie o arquivo de ambiente
+cp .env.example .env
+
+# 4. Rode o servidor
+python run.py
 ```
 
-Pronto! Crie sua conta e comece a usar. O banco de dados (`imobflow.db`) é criado automaticamente.
+Acesse: http://localhost:5000
+
+### Rodando com Docker
+
+```bash
+cp .env.example .env   # preencha as variáveis
+docker-compose up -d
+# Acesse: http://localhost:8000
+```
+
+---
+
+## ☁️ Deploy no Railway
+
+### Variáveis de ambiente obrigatórias
+
+Configure em: **Settings → Variables** no painel do serviço ImobFlow.
+
+| Variável | Como obter | Obrigatória? |
+|---|---|---|
+| `SECRET_KEY` | `python -c "import secrets; print(secrets.token_hex(32))"` | ✅ Sim |
+| `ENCRYPTION_KEY` | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` | ✅ Sim |
+| `DATABASE_URL` | Use `${{Postgres.DATABASE_URL}}` para linkar ao PostgreSQL | ✅ Sim |
+| `FLASK_DEBUG` | `false` (sempre em produção) | ✅ Sim |
+| `STRIPE_SECRET_KEY` | dashboard.stripe.com → Developers → API Keys | Para pagamentos |
+| `STRIPE_WEBHOOK_SECRET` | dashboard.stripe.com → Webhooks | Para pagamentos |
+| `N8N_WEBHOOK_URL` | URL do seu workflow n8n | Opcional |
+| `N8N_WEBHOOK_SECRET` | String aleatória que você define | Opcional |
+
+> **Atenção:** O valor de `DATABASE_URL` deve ser `${{Postgres.DATABASE_URL}}` — isso linka
+> automaticamente ao serviço PostgreSQL do Railway. Não deixe vazio!
+
+### Fluxo de deploy
+
+```bash
+# Após qualquer alteração:
+git add .
+git commit -m "feat: descrição do que foi feito"
+git push
+# Railway detecta o push e faz deploy automático (~2 min)
+```
+
+### Padrão de commits
+
+| Prefixo | Uso |
+|---|---|
+| `feat:` | nova funcionalidade |
+| `fix:` | correção de bug |
+| `style:` | mudança visual/CSS |
+| `docs:` | atualização de documentação |
+| `security:` | melhoria de segurança |
+| `chore:` | tarefas de manutenção (gitignore, deps, etc.) |
+
+> ⚠️ **NUNCA** suba o arquivo `.env` para o GitHub. Ele já está no `.gitignore`.
 
 ---
 
@@ -66,23 +170,38 @@ Pronto! Crie sua conta e comece a usar. O banco de dados (`imobflow.db`) é cria
 ```
 imobflow/
 │
-├── run.py                    ← Ponto de entrada. Você sempre roda este arquivo.
-├── config.py                 ← Configurações (chave secreta, banco de dados)
-├── requirements.txt          ← Lista de dependências para instalar com pip
+├── run.py                         ← Entry point
+├── config.py                      ← Configurações (lê variáveis de ambiente)
+├── requirements.txt               ← Dependências para produção (Railway/Linux)
+├── requirements-dev.txt           ← Dependências para desenvolvimento Windows
+├── gunicorn.conf.py               ← Config do servidor (fix PORT Railway)
+├── Procfile                       ← Comando de start (Railway usa railway.json)
+├── railway.json                   ← Configuração de deploy Railway
+├── docker-compose.yml             ← Para rodar com Docker localmente
+├── .env.example                   ← Template das variáveis de ambiente
 │
 ├── app/
-│   ├── __init__.py           ← "Fábrica" do Flask. Monta o app e registra as rotas.
-│   ├── models.py             ← Define as tabelas do banco de dados
+│   ├── __init__.py                ← Factory com Talisman, CSRF, blueprints
+│   ├── models.py                  ← Modelos com UUID + tenant_id + crypto
 │   │
-│   ├── routes/               ← Cada arquivo é um módulo de funcionalidades
-│   │   ├── auth.py           ← Login, cadastro, logout
-│   │   ├── dashboard.py      ← Página inicial com KPIs e gráficos
-│   │   ├── condominios.py    ← CRUD de condomínios
-│   │   ├── moradores.py      ← CRUD de moradores
-│   │   └── financeiro.py     ← Lançamentos, filtros, exportação CSV
+│   ├── routes/
+│   │   ├── auth.py                ← Login, cadastro, logout
+│   │   ├── dashboard.py           ← KPIs e gráficos
+│   │   ├── condominios.py         ← CRUD + webhook n8n
+│   │   ├── moradores.py           ← CRUD com campos criptografados
+│   │   ├── financeiro.py          ← Lançamentos, filtros, CSV
+│   │   ├── saas.py                ← Planos + Stripe
+│   │   └── pwa.py                 ← Manifest + service worker
 │   │
-│   └── templates/            ← Arquivos HTML que o Flask renderiza
-│       ├── base.html         ← Layout base (sidebar + topbar). Todos herdam deste.
+│   ├── services/
+│   │   ├── crypto.py              ← CryptoService (AES-256/Fernet)
+│   │   └── webhook.py             ← Webhooks n8n com HMAC-SHA256
+│   │
+│   ├── middleware/
+│   │   └── security.py            ← enforce_plan, get_tenant, rate_limit
+│   │
+│   └── templates/                 ← HTMLs Jinja2
+│       ├── base.html              ← Layout base (sidebar + topbar)
 │       ├── dashboard.html
 │       ├── auth/
 │       ├── condominios/
@@ -90,288 +209,81 @@ imobflow/
 │       └── financeiro/
 │
 └── static/
+    ├── logo.svg                   ← Logo hexágono vinho→ouro
     └── css/
-        └── style.css         ← Todo o visual (dark mode, responsivo)
-```
-
----
-
-## 🧠 Como o Flask Funciona
-
-Se você nunca usou Flask, aqui está a lógica de forma simples:
-
-### O ciclo de uma requisição
-
-```
-Usuário abre o navegador e acessa /dashboard
-        ↓
-Flask recebe a requisição
-        ↓
-Encontra a função em routes/dashboard.py que trata /dashboard
-        ↓
-A função busca dados no banco de dados (via models.py)
-        ↓
-Passa os dados para o template dashboard.html
-        ↓
-Flask renderiza o HTML com os dados e envia para o navegador
-        ↓
-Usuário vê a página pronta
-```
-
-### Blueprints (módulos de rotas)
-
-Em vez de colocar todas as rotas num arquivo só (que ficaria enorme), usamos **Blueprints** — cada funcionalidade tem seu próprio arquivo:
-
-```python
-# routes/condominios.py
-condominios_bp = Blueprint("condominios", __name__, url_prefix="/condominios")
-
-@condominios_bp.route("/")          # URL: /condominios/
-def listar(): ...
-
-@condominios_bp.route("/novo")      # URL: /condominios/novo
-def novo(): ...
-```
-
-### Templates Jinja2
-
-Os HTMLs usam uma linguagem de template chamada **Jinja2** que permite lógica dentro do HTML:
-
-```html
-{% for morador in moradores %}           <!-- loop -->
-  <tr>
-    <td>{{ morador.nome }}</td>          <!-- variável -->
-    {% if morador.ativo %}               <!-- condicional -->
-      <span class="badge">Ativo</span>
-    {% endif %}
-  </tr>
-{% endfor %}
-```
-
-### Herança de templates
-
-O `base.html` tem a sidebar e topbar. Todos os outros templates **herdam** dele:
-
-```html
-{% extends "base.html" %}              <!-- herda o layout -->
-{% block content %}
-  <!-- aqui vai só o conteúdo da página -->
-{% endblock %}
+        └── style.css              ← Identidade visual premium
 ```
 
 ---
 
 ## 🗄️ Banco de Dados
 
-### Tabelas e relacionamentos
-
 ```
 usuarios
-  └── condominios (um usuário tem vários condomínios)
-        └── unidades (um condomínio tem várias unidades)
-        │     └── moradores (uma unidade tem um morador)
-        └── lancamentos (um condomínio tem vários lançamentos)
+  └── condominios (tenant_id = usuario.id)
+        ├── unidades
+        │     └── moradores (CPF/tel/email criptografados)
+        └── lancamentos (receitas e despesas)
 ```
 
-### Modelos principais
+### Regras de segurança obrigatórias no código
 
-**Usuario** — quem faz login
-```python
-id, nome, email, senha_hash, perfil (sindico|imobiliaria|admin)
-```
-
-**Condominio** — o imóvel gerenciado
-```python
-id, nome, endereco, cidade, cep, total_unidades, usuario_id
-```
-
-**Unidade** — cada apartamento/sala do condomínio
-```python
-id, identificacao (101, 102...), tipo (apto|sala), condominio_id
-```
-
-**Morador** — quem mora na unidade
-```python
-id, nome, cpf, telefone, email, tipo (proprietario|inquilino), ativo, unidade_id
-```
-
-**Lancamento** — receita ou despesa
-```python
-id, descricao, valor, tipo (receita|despesa), categoria, data, pago, condominio_id
-```
+- Sempre filtrar queries por `tenant_id=current_user.id`
+- Novos modelos herdam `GUID()` como PK e incluem `tenant_id`
+- Campos sensíveis (CPF, telefone, email) sempre usam properties com `CryptoService`
+- Novas rotas sempre têm `@login_required` e validam tenant via middleware
+- CSS: sempre usar variáveis `--gold`, `--wine`, `--noir` — nunca hardcode cores
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades Implementadas
 
-### 🔐 Autenticação
-- Login por e-mail e senha
-- Senha com hash seguro (Werkzeug)
-- Sessão persistente com Flask-Login
-- Perfis: Síndico ou Imobiliária
+### 🔐 Autenticação e Segurança
+- Login por e-mail e senha com hash seguro
+- Multi-tenant isolado por UUID
+- Flask-Talisman: HSTS, CSP, X-XSS-Protection
+- Rate limiting por IP nos endpoints críticos
+- IDs públicos UUID (previne IDOR)
 
 ### 📊 Dashboard
-- KPIs: total de condomínios, moradores, receitas, despesas e saldo do mês
-- Gráfico de pizza interativo (Chart.js) — despesas por categoria
-- Tabela dos últimos 5 lançamentos
-- Cards de acesso rápido aos condomínios
+- KPIs: condomínios, moradores, receitas, despesas, saldo do mês
+- Gráfico de pizza interativo (Chart.js)
+- Tabela dos últimos lançamentos
 
 ### 🏢 Condomínios
-- Cadastrar condomínio com endereço, cidade, CEP
-- Definir número de unidades (criadas automaticamente: 1, 2, 3...)
-- Ver detalhe com lista de unidades e ocupação
-- Deletar condomínio (e todos os dados relacionados)
+- CRUD completo com webhook n8n
+- Limite por plano (Free: 1, Pro: 3, Gestora: ilimitado)
 
 ### 👥 Moradores
-- Cadastrar morador vinculado a uma unidade
-- Tipo: Proprietário ou Inquilino
-- Data de entrada e saída
-- Registrar saída (marca como inativo, não deleta os dados)
+- CPF, telefone e e-mail criptografados (AES-256)
+- Registro de entrada e saída
 
 ### 💰 Financeiro
-- Registrar receitas e despesas
-- Categorias dinâmicas por tipo (despesa: Manutenção, Água... / receita: Taxa, Aluguel...)
-- Filtro por tipo e por condomínio
-- Marcar como pago/pendente
-- Exportar tudo para CSV
+- Receitas e despesas com categorias
+- Filtros por tipo e condomínio
+- Exportação CSV
 
-### 📱 Interface
-- Dark mode moderno
-- Totalmente responsivo (funciona no celular)
-- Sidebar com navegação clara
-- Feedback visual para todas as ações
+### 💳 SaaS / Planos
+- Integração Stripe (checkout, webhook, atualização automática)
+- Decorator `@enforce_plan()` bloqueia ações além do limite
+- 3 planos: Free / Pro R$79 / Gestora R$199
 
----
-
-## 🔮 Próximos Passos (Etapa 3)
-
-### Funcionalidades prioritárias
-
-- [ ] **Cobranças automáticas** — gerar taxa condominial para todos os moradores de uma vez
-- [ ] **Relatório mensal em PDF** — balancete com receitas, despesas e saldo
-- [ ] **Painel do morador** — login separado para moradores verem suas cobranças
-- [ ] **Notificações por e-mail** — boleto vencendo, inadimplência
-- [ ] **Upload de documentos** — atas de assembleia, contratos
-- [ ] **Múltiplos administradores** — por condomínio
-
-### Infraestrutura para escalar
-
-- [ ] **Deploy no Railway/Render** — colocar online com URL pública (gratuito para começar)
-- [ ] **Trocar SQLite por PostgreSQL** — necessário para produção
-- [ ] **Variáveis de ambiente** — proteger chaves e senhas
-- [ ] **Domínio próprio** — imobflow.com.br
-
-### Monetização
-
-- [ ] **Plano Free** — 1 condomínio, até 30 unidades
-- [ ] **Plano Pro** — R$ 49/mês — ilimitado + relatórios PDF
-- [ ] **Plano Gestora** — R$ 149/mês — múltiplos condomínios + painel do morador
-- [ ] **Integração Stripe/Asaas** — pagamento recorrente automatizado
+### 📱 PWA
+- Instalável no Android e iOS
+- Service worker com cache offline
 
 ---
 
-## 🛠️ Tecnologias Usadas
+## 🔮 Próximas Etapas
 
-| Tecnologia | Para que serve |
-|---|---|
-| **Flask** | Framework web — recebe requisições e serve páginas |
-| **Flask-SQLAlchemy** | ORM — traduz Python para SQL (você não escreve SQL na mão) |
-| **Flask-Login** | Gerencia sessão de usuário (quem está logado) |
-| **Werkzeug** | Hash de senhas e utilitários web |
-| **Jinja2** | Motor de templates HTML (já vem com Flask) |
-| **Chart.js** | Gráficos interativos no navegador (JavaScript) |
-| **SQLite** | Banco de dados local (arquivo .db) |
+| Etapa | Descrição | Status |
+|---|---|---|
+| Portal do Morador | Login separado `/portal` — morador vê cobranças e comunicados | 🔴 Pendente |
+| Relatório PDF | Balancete mensal com ReportLab (planos Pro e Gestora) | 🔴 Pendente |
+| Templates completos | Identidade visual nos templates de condos/moradores/financeiro | 🟡 Parcial |
+| Landing page | Site de vendas público `/landing` | 🔴 Pendente |
+| Plano de negócios | Guia de vendas para síndicos e imobiliárias | 🔴 Pendente |
 
 ---
 
-*Desenvolvido por Petterson — projeto de estudos evoluindo para produto real.*
-
-
----
-
-## 🚀 Deploy no Railway (colocar online)
-
-### O que é o Railway?
-Railway é uma plataforma de hospedagem que pega seu código do GitHub e coloca ele rodando na internet automaticamente. Você não precisa configurar servidor. É gratuito até ~5 dólares de uso/mês.
-
-Resultado: seu sistema ficará acessível em uma URL pública como `imobflow.up.railway.app`.
-
-### Arquivos criados para o deploy
-
-| Arquivo | Para que serve |
-|---|---|
-| `Procfile` | Diz ao Railway como iniciar o sistema (`gunicorn`) |
-| `railway.json` | Configurações de build e restart automático |
-| `config.py` | Lê variáveis de ambiente (SECRET_KEY, DATABASE_URL) |
-| `.env.example` | Modelo das variáveis que precisam ser configuradas |
-| `requirements.txt` | Agora inclui `gunicorn` (servidor de produção) |
-
-### Por que Gunicorn?
-
-Quando você roda `python run.py` localmente, o Flask usa um servidor simples que **não aguenta múltiplos usuários simultâneos**. O `gunicorn` é um servidor de produção que resolve isso — aguentando dezenas de usuários ao mesmo tempo.
-
-### Passo a passo do deploy
-
-**1. Sobe os novos arquivos para o GitHub**
-```bash
-git add .
-git commit -m "feat: configura deploy no Railway"
-git push
-```
-
-**2. Cria conta no Railway**
-- Acesse: `railway.app`
-- Clique em **"Start a New Project"**
-- Escolha **"Deploy from GitHub repo"**
-- Autorize o Railway a acessar seu GitHub
-- Selecione o repositório `ImobFlow`
-
-**3. Adiciona o banco de dados PostgreSQL**
-- No painel do projeto, clique em **"+ New"**
-- Escolha **"Database" → "PostgreSQL"**
-- Railway cria o banco e define a variável `DATABASE_URL` automaticamente
-
-**4. Configura as variáveis de ambiente**
-- Clique no seu serviço Flask → aba **"Variables"**
-- Adicione:
-  ```
-  SECRET_KEY = uma-string-aleatoria-longa-aqui
-  FLASK_DEBUG = false
-  ```
-- A `DATABASE_URL` já é preenchida automaticamente pelo PostgreSQL
-
-**5. Deploy automático**
-- Após configurar, o Railway faz o deploy automaticamente
-- Aguarde ~2 minutos
-- Clique em **"View Logs"** para acompanhar
-- Quando aparecer `Listening on 0.0.0.0:XXXX` → está no ar!
-
-**6. Acessa a URL pública**
-- Clique em **"Settings" → "Domains"**
-- Clique em **"Generate Domain"**
-- Sua URL pública estará disponível!
-
-### Como gerar a SECRET_KEY
-
-No terminal, rode:
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-Copie o resultado e use como valor da `SECRET_KEY` no Railway.
-
-### Deploy automático a cada push
-
-Após configurar, **todo `git push` faz um novo deploy automaticamente**. Você atualiza o código, sobe para o GitHub e em 2 minutos o sistema online já está atualizado.
-
----
-
-## 📋 Checklist completo antes de lançar
-
-- [ ] Subiu os arquivos de deploy para o GitHub
-- [ ] Criou conta no Railway
-- [ ] Conectou o repositório ImobFlow
-- [ ] Adicionou PostgreSQL ao projeto
-- [ ] Configurou `SECRET_KEY` nas variáveis
-- [ ] Deploy concluído sem erros nos logs
-- [ ] Gerou domínio público
-- [ ] Testou criar conta e fazer login na URL pública
+*ImobFlow — Desenvolvido por Petterson (PetterSec) · Maio 2026*
