@@ -3,18 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}ImobFlow{% endblock %} — ImobFlow</title>
-
-  <!-- PWA -->
+  <title>{% block title %}ImobFlow{% endblock %} — Gestão Premium</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#00D4AA">
+  <meta name="theme-color" content="#C9963A">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ImobFlow">
-
-  <!-- Segurança: noindex em dev -->
+  <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
   {% if config.DEBUG %}<meta name="robots" content="noindex">{% endif %}
-
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -24,8 +19,15 @@
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-text">🏢 ImobFlow</div>
-    <div class="logo-sub">Gestão de Condomínios<br>& Imobiliárias</div>
+    <div class="logo-mark-wrap">
+      <svg class="logo-hex" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 5L41 14.8V33.2L24 43L7 33.2V14.8L24 5Z" stroke="#C9963A" stroke-width="1.2" fill="none"/>
+        <path d="M24 11L34 16.8V27.2L24 33L14 27.2V16.8L24 11Z" fill="#6B1E3C" stroke="#C9963A" stroke-width="1"/>
+        <path d="M24 17L29 19.9V25.1L24 28L19 25.1V19.9L24 17Z" fill="#C9963A"/>
+      </svg>
+      <div class="logo-name">ImobFlow</div>
+    </div>
+    <div class="logo-tagline">Gestão Condominial & Imobiliária</div>
   </div>
 
   <nav class="sidebar-nav">
@@ -63,18 +65,19 @@
        class="nav-link {% if request.endpoint and 'saas' in request.endpoint %}active{% endif %}">
       <span class="icon">⭐</span> Planos
       {% if current_user.plano_atual == 'free' %}
-        <span class="badge badge-pendente" style="margin-left:auto;font-size:0.65rem;">Free</span>
+        <span class="badge-plan">Free</span>
       {% endif %}
     </a>
   </nav>
 
   <div class="sidebar-user">
+    <div class="user-avatar">{{ current_user.nome[:2].upper() }}</div>
     <div class="user-name">{{ current_user.nome }}</div>
     <div class="user-role">
       {{ current_user.perfil | capitalize }} ·
-      <span style="color:var(--accent);">{{ current_user.plano_atual | capitalize }}</span>
+      <span>{{ current_user.plano_atual | capitalize }}</span>
     </div>
-    <a href="{{ url_for('auth.logout') }}">🚪 Sair</a>
+    <a href="{{ url_for('auth.logout') }}">🚪 Sair da conta</a>
   </div>
 </aside>
 
@@ -108,13 +111,12 @@
 </div>
 
 <script>
-function toggleSidebar() {
+function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('visible');
 }
-// Registra service worker (PWA)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
 }
 </script>
 {% block scripts %}{% endblock %}
