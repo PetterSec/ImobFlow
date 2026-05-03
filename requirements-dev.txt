@@ -15,9 +15,11 @@ wtforms==3.1.2
 flask-talisman==1.1.0
 cryptography==42.0.8
 
+# Carrega .env automaticamente em dev
+python-dotenv==1.0.1
+
 # Banco de dados
-# psycopg2-binary OMITIDO no dev — usa SQLite localmente
-# PostgreSQL só é necessário em produção (Railway injeta DATABASE_URL)
+# psycopg2-binary OMITIDO — usa SQLite localmente
 sqlalchemy==2.0.31
 
 # Servidor

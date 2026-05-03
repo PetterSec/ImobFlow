@@ -2,6 +2,13 @@ from app import create_app
 from datetime import datetime
 import os
 
+# Carrega .env automaticamente em desenvolvimento
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # Em produção (Railway) não precisa de dotenv
+
 app = create_app()
 
 @app.context_processor
