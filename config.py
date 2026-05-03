@@ -10,10 +10,21 @@ def _get_db_url() -> str:
 
 
 def _get_or_create_fernet_key() -> bytes:
-    key = os.environ.get("ENCRYPTION_KEY", "")
-    if key:
-        return key.encode()
-    # Em dev, gera uma chave temporária e avisa
+    raw = (os.environ.get("ENCRYPTION_KEY") or "").strip()
+    if raw:
+        try:
+            Fernet(raw.encode())
+            return raw.encode()
+        except Exception:
+            debug = os.environ.get("FLASK_DEBUG", "").lower() == "true"
+            msg = (
+                "ENCRYPTION_KEY inválida ou corrompida — deve ser o output de "
+                "Fernet.generate_key().decode()."
+            )
+            if debug:
+                print(f"[AVISO] {msg} Usando chave temporária em FLASK_DEBUG.")
+                return Fernet.generate_key()
+            raise RuntimeError(msg) from None
     generated = Fernet.generate_key()
     print(
         "[AVISO] ENCRYPTION_KEY não definida — usando chave temporária. "

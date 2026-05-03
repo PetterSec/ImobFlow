@@ -64,6 +64,7 @@
           <td>
             <form method="POST" action="{{ url_for('financeiro.deletar', lid=l.id) }}"
                   onsubmit="return confirm('Deletar este lançamento?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button class="btn btn-danger btn-sm btn-icon">🗑</button>
             </form>
           </td>

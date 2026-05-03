@@ -68,8 +68,14 @@ class Usuario(UserMixin, db.Model):
 
     condominios = db.relationship("Condominio", backref="dono", lazy="dynamic",
                                   cascade="all, delete-orphan")
-    lancamentos = db.relationship("Lancamento", backref="autor", lazy="dynamic",
-                                  cascade="all, delete-orphan")
+    # Dois FKs apontam para usuarios (usuario_id = autor, tenant_id = isolamento)
+    lancamentos = db.relationship(
+        "Lancamento",
+        foreign_keys="Lancamento.usuario_id",
+        backref=db.backref("autor", lazy="joined"),
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
 
     def set_senha(self, senha: str) -> None:
         self.senha_hash = generate_password_hash(senha)

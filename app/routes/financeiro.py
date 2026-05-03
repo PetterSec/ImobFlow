@@ -7,7 +7,7 @@ import csv, io
 financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 
 def _condominios():
-    return Condominio.query.filter_by(usuario_id=current_user.id).all()
+    return Condominio.query.filter_by(tenant_id=current_user.id).all()
 
 @financeiro_bp.route("/")
 @login_required
@@ -19,7 +19,7 @@ def listar():
     if tipo:
         query = query.filter_by(tipo=tipo)
     if cid:
-        query = query.filter_by(condominio_id=int(cid))
+        query = query.filter_by(condominio_id=cid)
     lancamentos = query.order_by(Lancamento.data.desc()).all()
     return render_template("financeiro/listar.html",
         lancamentos=lancamentos,
@@ -39,7 +39,14 @@ def novo():
         data_str      = request.form.get("data") or str(date.today())
         pago          = request.form.get("pago") == "on"
         observacao    = request.form.get("observacao", "").strip()
-        condominio_id = int(request.form.get("condominio_id", 0))
+        condominio_id = (request.form.get("condominio_id") or "").strip()
+        if not condominio_id:
+            flash("Selecione um condomínio.", "danger")
+            return render_template("financeiro/form.html",
+                condominios=condominios,
+                cats_despesa=CATEGORIAS_DESPESA,
+                cats_receita=CATEGORIAS_RECEITA,
+            )
 
         try:
             valor = float(valor_str)
@@ -56,7 +63,9 @@ def novo():
             descricao=descricao, valor=valor, tipo=tipo,
             categoria=categoria, data=date.fromisoformat(data_str),
             pago=pago, observacao=observacao,
-            condominio_id=condominio_id, usuario_id=current_user.id,
+            condominio_id=condominio_id,
+            usuario_id=current_user.id,
+            tenant_id=current_user.id,
         )
         db.session.add(l)
         db.session.commit()
@@ -69,7 +78,7 @@ def novo():
         cats_receita=CATEGORIAS_RECEITA,
     )
 
-@financeiro_bp.route("/<int:lid>/deletar", methods=["POST"])
+@financeiro_bp.route("/<string:lid>/deletar", methods=["POST"])
 @login_required
 def deletar(lid):
     l = Lancamento.query.get_or_404(lid)

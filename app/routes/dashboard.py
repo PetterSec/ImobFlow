@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 from flask_login import login_required, current_user
 from ..models import db, Condominio, Lancamento, Morador, Unidade
-from sqlalchemy import func
+from sqlalchemy import extract, func
 from datetime import datetime
 
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -9,7 +9,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @dashboard_bp.route("/dashboard")
 @login_required
 def index():
-    condominios = Condominio.query.filter_by(usuario_id=current_user.id).all()
+    condominios = Condominio.query.filter_by(tenant_id=current_user.id).all()
     ids = [c.id for c in condominios]
 
     mes_atual = datetime.utcnow().month
@@ -20,22 +20,22 @@ def index():
         db.session.query(func.count(Morador.id))
         .join(Unidade, Morador.unidade_id == Unidade.id)
         .join(Condominio, Unidade.condominio_id == Condominio.id)
-        .filter(Condominio.usuario_id == current_user.id, Morador.ativo == True)
+        .filter(Condominio.tenant_id == current_user.id, Morador.ativo == True)
         .scalar() or 0
     )
 
     receitas_mes = db.session.query(func.sum(Lancamento.valor)).filter(
         Lancamento.condominio_id.in_(ids),
         Lancamento.tipo == "receita",
-        func.strftime("%m", Lancamento.data) == f"{mes_atual:02d}",
-        func.strftime("%Y", Lancamento.data) == str(ano_atual),
+        extract("month", Lancamento.data) == mes_atual,
+        extract("year", Lancamento.data) == ano_atual,
     ).scalar() or 0.0
 
     despesas_mes = db.session.query(func.sum(Lancamento.valor)).filter(
         Lancamento.condominio_id.in_(ids),
         Lancamento.tipo == "despesa",
-        func.strftime("%m", Lancamento.data) == f"{mes_atual:02d}",
-        func.strftime("%Y", Lancamento.data) == str(ano_atual),
+        extract("month", Lancamento.data) == mes_atual,
+        extract("year", Lancamento.data) == ano_atual,
     ).scalar() or 0.0
 
     ultimos = Lancamento.query.filter(
@@ -47,8 +47,8 @@ def index():
     ).filter(
         Lancamento.condominio_id.in_(ids),
         Lancamento.tipo == "despesa",
-        func.strftime("%m", Lancamento.data) == f"{mes_atual:02d}",
-        func.strftime("%Y", Lancamento.data) == str(ano_atual),
+        extract("month", Lancamento.data) == mes_atual,
+        extract("year", Lancamento.data) == ano_atual,
     ).group_by(Lancamento.categoria).all()
 
     return render_template("dashboard.html",

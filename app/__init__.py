@@ -1,10 +1,14 @@
 """
 App factory — monta a aplicação Flask com todas as extensões de segurança.
 """
-from flask import Flask, jsonify
+import uuid
+
+from flask import Flask, jsonify, render_template, request
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_talisman import Talisman
+from werkzeug.exceptions import HTTPException
+
 from .models import db, Usuario
 from config import Config
 
@@ -63,7 +67,13 @@ def create_app(config_class=Config) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(Usuario, user_id)
+        if not user_id:
+            return None
+        try:
+            uid = uuid.UUID(str(user_id))
+        except (ValueError, TypeError):
+            return None
+        return db.session.get(Usuario, uid)
 
     # ── Blueprints ─────────────────────────────────────────────────────────────
     from .routes.auth import auth_bp
@@ -87,6 +97,19 @@ def create_app(config_class=Config) -> Flask:
     @app.route("/health")
     def health():
         return jsonify({"status": "ok"}), 200
+
+    @app.errorhandler(Exception)
+    def handle_unhandled_exception(exc):
+        if isinstance(exc, HTTPException):
+            return exc
+        if app.debug:
+            raise exc
+        app.logger.exception(
+            "Erro não tratado em %s %s",
+            request.method,
+            request.path,
+        )
+        return render_template("errors/500.html"), 500
 
     # ── Cria tabelas ───────────────────────────────────────────────────────────
     with app.app_context():

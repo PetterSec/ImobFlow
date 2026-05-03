@@ -6,6 +6,7 @@
 <div style="max-width:600px;">
   <div class="card">
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Nome do Condomínio *</label>
         <input type="text" name="nome" class="form-control" placeholder="Ex: Residencial das Flores"

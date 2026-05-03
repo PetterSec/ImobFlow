@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
 from ..models import db, Usuario
 
 auth_bp = Blueprint("auth", __name__)
@@ -37,8 +39,18 @@ def cadastro():
 
         user = Usuario(nome=nome, email=email, perfil=perfil)
         user.set_senha(senha)
-        db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("E-mail já cadastrado ou dados em conflito.", "danger")
+            return render_template("auth/cadastro.html")
+        except SQLAlchemyError:
+            db.session.rollback()
+            current_app.logger.exception("Falha ao persistir novo usuário (cadastro)")
+            flash("Não foi possível concluir o cadastro. Tente novamente.", "danger")
+            return render_template("auth/cadastro.html")
         flash("Conta criada! Faça login.", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/cadastro.html")

@@ -16,6 +16,7 @@
       <span style="font-size:1.8rem;">🏢</span>
       <form method="POST" action="{{ url_for('condominios.deletar', cid=c.id) }}"
             onsubmit="return confirm('Deletar {{ c.nome }}?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-danger btn-sm btn-icon">🗑</button>
       </form>
     </div>

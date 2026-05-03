@@ -6,6 +6,7 @@
 <div style="max-width:620px;">
   <div class="card">
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nome completo *</label>

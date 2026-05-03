@@ -37,6 +37,7 @@
             {% if m.ativo %}
             <form method="POST" action="{{ url_for('moradores.desativar', mid=m.id) }}"
                   onsubmit="return confirm('Registrar saída de {{ m.nome }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button class="btn btn-danger btn-sm">Saída</button>
             </form>
             {% endif %}

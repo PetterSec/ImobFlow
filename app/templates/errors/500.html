@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erro no servidor — ImobFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:420px;text-align:center;">
+    <h1 style="font-size:1.25rem;margin-bottom:12px;">Algo deu errado</h1>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.5;">
+      Não foi possível processar sua solicitação. A equipe foi notificada nos logs.
+      Tente novamente em alguns instantes.
+    </p>
+    <p style="margin-top:20px;">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="display:inline-block;padding:10px 20px;">Voltar ao início</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>
