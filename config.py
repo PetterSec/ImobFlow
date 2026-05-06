@@ -1,6 +1,5 @@
 import os
 from cryptography.fernet import Fernet
-from sqlalchemy.pool import StaticPool
 
 
 def _get_db_url() -> str:
@@ -11,21 +10,10 @@ def _get_db_url() -> str:
 
 
 def _get_or_create_fernet_key() -> bytes:
-    raw = (os.environ.get("ENCRYPTION_KEY") or "").strip()
-    if raw:
-        try:
-            Fernet(raw.encode())
-            return raw.encode()
-        except Exception:
-            debug = os.environ.get("FLASK_DEBUG", "").lower() == "true"
-            msg = (
-                "ENCRYPTION_KEY inválida ou corrompida — deve ser o output de "
-                "Fernet.generate_key().decode()."
-            )
-            if debug:
-                print(f"[AVISO] {msg} Usando chave temporária em FLASK_DEBUG.")
-                return Fernet.generate_key()
-            raise RuntimeError(msg) from None
+    key = os.environ.get("ENCRYPTION_KEY", "")
+    if key:
+        return key.encode()
+    # Em dev, gera uma chave temporária e avisa
     generated = Fernet.generate_key()
     print(
         "[AVISO] ENCRYPTION_KEY não definida — usando chave temporária. "
@@ -64,16 +52,6 @@ class Config:
     # ── Stripe ────────────────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: str = os.environ.get("STRIPE_SECRET_KEY", "")
     STRIPE_WEBHOOK_SECRET: str = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-    # Price IDs do Dashboard Stripe (Products → Price → API ID: price_...)
-    STRIPE_PRICE_ID_PRO: str = os.environ.get("STRIPE_PRICE_ID_PRO", "")
-    STRIPE_PRICE_ID_GESTORA: str = os.environ.get("STRIPE_PRICE_ID_GESTORA", "")
-
-    # Anúncios (plano Free) — exige conta Google AdSense aprovada; ver docs/MONETIZACAO_E_SAAS.md
-    SHOW_ADS_ON_FREE_PLAN: bool = (
-        os.environ.get("SHOW_ADS_ON_FREE_PLAN", "false").lower() == "true"
-    )
-    GOOGLE_ADSENSE_CLIENT: str = os.environ.get("GOOGLE_ADSENSE_CLIENT", "")
-    GOOGLE_ADSENSE_SLOT: str = os.environ.get("GOOGLE_ADSENSE_SLOT", "")
 
     # ── Planos e limites ──────────────────────────────────────────────────────
     PLAN_LIMITS: dict = {
@@ -86,18 +64,6 @@ class Config:
     N8N_WEBHOOK_URL: str = os.environ.get("N8N_WEBHOOK_URL", "")
     N8N_WEBHOOK_SECRET: str = os.environ.get("N8N_WEBHOOK_SECRET", "")
 
-
-class TestConfig(Config):
-    """Configuração isolada para pytest (SQLite em memória, sem rede)."""
-
-    TESTING: bool = True
-    DEBUG: bool = True
-    SECRET_KEY: str = "pytest-secret-do-not-use-in-production"
-    SQLALCHEMY_DATABASE_URI: str = "sqlite:///:memory:"
-    SQLALCHEMY_ENGINE_OPTIONS: dict = {
-        "connect_args": {"check_same_thread": False},
-        "poolclass": StaticPool,
-    }
-    # Chave Fernet válida fixa para testes de CryptoService / Morador
-    FERNET_KEY: bytes = Fernet.generate_key()
-    SESSION_COOKIE_SECURE: bool = False
+    # ── Google OAuth ──────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID:     str = os.environ.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
