@@ -1,82 +1,104 @@
 """
-Portal do Morador — acesso separado via token seguro
-O morador acessa seus lançamentos sem ter conta de administrador.
+Portal do Morador — acesso restrito em /portal
+Login separado: morador usa CPF + senha cadastrada pelo síndico.
+Morador vê APENAS dados da sua própria unidade.
 """
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort
-from ..models import db, Morador, Lancamento, Condominio, Unidade
-import hashlib, secrets
+from flask import (Blueprint, render_template, redirect,
+                   url_for, flash, request, session)
+from functools import wraps
+from ..models import db, Morador, Cobranca, Comunicado, Unidade, Condominio
+from ..middleware.security import rate_limit
 
-portal_bp = Blueprint("portal", __name__)
+portal_bp = Blueprint("portal", __name__, url_prefix="/portal")
 
-def _gerar_token_acesso(morador_id: str, email: str) -> str:
-    """Token determinístico baseado em ID + email + secret."""
-    from flask import current_app
-    base = f"{morador_id}:{email}:{current_app.config['SECRET_KEY']}"
-    return hashlib.sha256(base.encode()).hexdigest()[:32]
+# ── Sessão isolada do portal (não mistura com admin) ─────────────────────────
 
+def portal_login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("portal_morador_id"):
+            flash("Faça login para acessar o portal.", "info")
+            return redirect(url_for("portal.login"))
+        return f(*args, **kwargs)
+    return decorated
+
+def get_morador_logado() -> Morador | None:
+    mid = session.get("portal_morador_id")
+    if not mid:
+        return None
+    return db.session.get(Morador, mid)
+
+# ── Login ─────────────────────────────────────────────────────────────────────
+
+@portal_bp.route("/login", methods=["GET", "POST"])
+@rate_limit(max_calls=10, window=60)
+def login():
+    if session.get("portal_morador_id"):
+        return redirect(url_for("portal.dashboard"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+
+        # Busca por email criptografado — decripta para comparar
+        from ..services.crypto import CryptoService
+        moradores = Morador.query.filter_by(ativo=True).all()
+        morador = next(
+            (m for m in moradores
+             if CryptoService.decrypt(m._email) == email),
+            None
+        )
+
+        if morador and morador.check_senha_portal(senha):
+            session["portal_morador_id"] = str(morador.id)
+            session.permanent = True
+            return redirect(url_for("portal.dashboard"))
+
+        flash("E-mail ou senha incorretos.", "danger")
+
+    return render_template("portal/login.html")
+
+
+@portal_bp.route("/logout")
+def logout():
+    session.pop("portal_morador_id", None)
+    flash("Você saiu do portal.", "info")
+    return redirect(url_for("portal.login"))
+
+# ── Dashboard do morador ──────────────────────────────────────────────────────
 
 @portal_bp.route("/")
-def index():
-    return render_template("portal/index.html")
+@portal_bp.route("/dashboard")
+@portal_login_required
+def dashboard():
+    morador   = get_morador_logado()
+    unidade   = morador.unidade
+    condo     = unidade.condominio
 
+    # Cobranças — em aberto e pagas (últimas 6)
+    pendentes = (Cobranca.query
+                 .filter_by(morador_id=morador.id, pago=False)
+                 .order_by(Cobranca.vencimento)
+                 .all())
+    pagas = (Cobranca.query
+             .filter_by(morador_id=morador.id, pago=True)
+             .order_by(Cobranca.pago_em.desc())
+             .limit(6).all())
 
-@portal_bp.route("/acesso", methods=["GET", "POST"])
-def acesso():
-    """Morador informa e-mail para receber link de acesso."""
-    if request.method == "POST":
-        email_input = request.form.get("email", "").strip().lower()
-        # Busca morador pelo e-mail descriptografado
-        moradores = Morador.query.filter_by(ativo=True).all()
-        morador_encontrado = None
-        for m in moradores:
-            if m.email and m.email.lower() == email_input:
-                morador_encontrado = m
-                break
+    # Comunicados do condomínio (últimos 5)
+    comunicados = (Comunicado.query
+                   .filter_by(condominio_id=condo.id)
+                   .order_by(Comunicado.criado_em.desc())
+                   .limit(5).all())
 
-        if morador_encontrado:
-            token = _gerar_token_acesso(str(morador_encontrado.id), email_input)
-            # Em produção: enviar por e-mail. Por ora, redireciona direto.
-            flash("Acesso autorizado! Em produção, um link seria enviado ao seu e-mail.", "success")
-            return redirect(url_for("portal.painel", morador_id=str(morador_encontrado.id), token=token))
-        else:
-            flash("E-mail não encontrado. Verifique com o síndico.", "danger")
+    total_pendente = sum(c.valor for c in pendentes)
 
-    return render_template("portal/acesso.html")
-
-
-@portal_bp.route("/painel/<string:morador_id>")
-def painel(morador_id: str):
-    """Painel do morador — valida token antes de exibir."""
-    token = request.args.get("token", "")
-    morador = Morador.query.filter_by(id=morador_id, ativo=True).first_or_404()
-
-    # Valida token — evita acesso não autorizado
-    if not morador.email:
-        abort(403)
-    token_esperado = _gerar_token_acesso(morador_id, morador.email.lower())
-    if not secrets.compare_digest(token, token_esperado):
-        abort(403)
-
-    unidade = morador.unidade
-    condo = unidade.condominio if unidade else None
-
-    # Lançamentos do condomínio (visão pública — sem dados de outros moradores)
-    lancamentos = []
-    if condo:
-        lancamentos = Lancamento.query.filter_by(
-            condominio_id=condo.id
-        ).order_by(Lancamento.data.desc()).limit(24).all()
-
-    receitas = sum(l.valor for l in lancamentos if l.tipo == "receita")
-    despesas = sum(l.valor for l in lancamentos if l.tipo == "despesa")
-
-    return render_template("portal/painel.html",
+    return render_template("portal/dashboard.html",
         morador=morador,
         unidade=unidade,
         condo=condo,
-        lancamentos=lancamentos,
-        receitas=receitas,
-        despesas=despesas,
-        saldo=receitas - despesas,
-        token=token,
+        pendentes=pendentes,
+        pagas=pagas,
+        comunicados=comunicados,
+        total_pendente=total_pendente,
     )

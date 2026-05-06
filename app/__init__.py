@@ -52,6 +52,7 @@ def create_app(config_class=Config) -> Flask:
     from .routes.financeiro  import financeiro_bp
     from .routes.saas        import saas_bp
     from .routes.pwa         import pwa_bp
+    from .routes.portal      import portal_bp
 
     # Inicia OAuth ANTES de registrar o blueprint
     init_oauth(app)
@@ -63,6 +64,7 @@ def create_app(config_class=Config) -> Flask:
     app.register_blueprint(financeiro_bp)
     app.register_blueprint(saas_bp)
     app.register_blueprint(pwa_bp)
+    app.register_blueprint(portal_bp)
 
     @app.route("/health")
     def health():

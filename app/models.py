@@ -124,6 +124,20 @@ class Morador(db.Model):
     tenant_id    = db.Column(GUID(), db.ForeignKey("usuarios.id"), nullable=False, index=True)
     criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+    # Senha do portal (síndico define para o morador)
+    _senha_portal = db.Column("senha_portal", db.String(256), nullable=True)
+
+    def set_senha_portal(self, senha: str):
+        from werkzeug.security import generate_password_hash
+        self._senha_portal = generate_password_hash(senha)
+
+    def check_senha_portal(self, senha: str) -> bool:
+        if not self._senha_portal:
+            return False
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self._senha_portal, senha)
+
     @property
     def cpf(self):
         from .services.crypto import CryptoService
@@ -179,3 +193,30 @@ CATEGORIAS_DESPESA = [
 CATEGORIAS_RECEITA = [
     "Taxa Condominial", "Multa", "Reserva de Área", "Aluguel", "Outros",
 ]
+
+# ── Comunicado ────────────────────────────────────────────────────────────────
+class Comunicado(db.Model):
+    __tablename__ = "comunicados"
+
+    id            = db.Column(GUID(), primary_key=True, default=_new_uuid)
+    titulo        = db.Column(db.String(200), nullable=False)
+    corpo         = db.Column(db.Text, nullable=False)
+    criado_em     = db.Column(db.DateTime, default=datetime.utcnow)
+    condominio_id = db.Column(GUID(), db.ForeignKey("condominios.id"), nullable=False, index=True)
+    tenant_id     = db.Column(GUID(), db.ForeignKey("usuarios.id"), nullable=False, index=True)
+
+# ── Cobrança do morador ───────────────────────────────────────────────────────
+class Cobranca(db.Model):
+    __tablename__ = "cobranças"
+
+    id          = db.Column(GUID(), primary_key=True, default=_new_uuid)
+    descricao   = db.Column(db.String(200), nullable=False)
+    valor       = db.Column(db.Float, nullable=False)
+    vencimento  = db.Column(db.Date, nullable=False)
+    pago        = db.Column(db.Boolean, default=False)
+    pago_em     = db.Column(db.DateTime, nullable=True)
+    morador_id  = db.Column(GUID(), db.ForeignKey("moradores.id"), nullable=False, index=True)
+    tenant_id   = db.Column(GUID(), db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    morador = db.relationship("Morador", backref="cobranças")
